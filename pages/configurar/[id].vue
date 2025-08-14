@@ -132,7 +132,7 @@
 
         <!-- Paso 3: Cargar Beneficiarios -->
         <div class="section">
-          <h2 class="section-title">Beneficiarios</h2>
+          <h2 class="section-title">Beneficiarios (Opcional)</h2>
           
           <div class="form-group">
             <label class="form-label">Método de carga</label>
@@ -148,6 +148,7 @@
                 <span>Carga masiva (CSV/Excel)</span>
               </label>
             </div>
+            <p class="form-help">Los beneficiarios son opcionales. Si no agregas ninguno, la gift card será para ti mismo.</p>
           </div>
 
           <!-- Carga Manual -->
@@ -235,9 +236,10 @@
           <div class="beneficiary-list">
             <div class="list-header">
               <h4>Beneficiarios Agregados ({{ beneficiaries.length }})</h4>
+              <span class="optional-text">Opcional</span>
             </div>
             <p v-if="beneficiaries.length === 0" class="no-beneficiaries">
-              No hay beneficiarios agregados
+              No hay beneficiarios agregados. La gift card será para ti mismo.
             </p>
             <div v-else class="beneficiaries-grid">
               <div 
@@ -464,14 +466,14 @@ const total = computed(() => subtotal.value + tax.value);
 
 const processButtonText = computed(() => {
   if (beneficiaries.value.length === 0) {
-    return 'Comprar Gift Card';
+    return 'Comprar Gift Card para mí';
   }
   return 'Procesar Compra';
 });
 
 const processStatus = computed(() => {
   if (beneficiaries.value.length === 0) {
-    return 'Listo para comprar';
+    return 'Listo para comprar para ti mismo';
   }
   return 'Listo para procesar';
 });
@@ -883,6 +885,13 @@ onMounted(() => {
   color: #495057;
 }
 
+.form-help {
+  margin-top: 8px;
+  font-size: 14px;
+  color: #6c757d;
+  font-style: italic;
+}
+
 .form-input, .form-textarea {
   width: 100%;
   padding: 12px 16px;
@@ -1054,6 +1063,12 @@ onMounted(() => {
   margin: 0;
   font-size: 18px;
   color: #495057;
+}
+
+.optional-text {
+  color: #6c7280;
+  font-size: 14px;
+  font-style: italic;
 }
 
 .no-beneficiaries {
