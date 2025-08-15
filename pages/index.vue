@@ -493,13 +493,13 @@ const handleCardMouseLeave = (cardId: number) => {
   };
 };
 
-const getCardTransform = (cardId: number) => {
+const getCardTransform = (cardId: number): Record<string, string> => {
   const transform = cardTransforms.value[cardId];
   if (!transform) return {};
   
   return {
     transform: `perspective(1000px) rotateX(${transform.rotateX}deg) rotateY(${transform.rotateY}deg) scale(${transform.scale})`,
-    transformStyle: 'preserve-3d'
+    'transform-style': 'preserve-3d'
   };
 };
 
