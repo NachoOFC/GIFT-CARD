@@ -35,7 +35,7 @@
           <div class="selected-gift-card">
             <div class="gift-card-preview">
               <div class="card-badge">FULL</div>
-              <div class="card-brand">GIFT CARD cencosud</div>
+              <div class="card-brand">GIFT CARD</div>
               <div class="card-image-placeholder">
                 <span class="card-emoji">🎮</span>
               </div>
