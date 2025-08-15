@@ -13,7 +13,5 @@ export default defineNuxtConfig({
   experimental: {
     payloadExtraction: false
   },
-  future: {
-    compatibilityVersion: '4.x'
-  }
+  
 })
