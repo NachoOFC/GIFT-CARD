@@ -493,14 +493,14 @@ const handleCardMouseLeave = (cardId: number) => {
   };
 };
 
-const getCardTransform = (cardId: number): Record<string, string> => {
+const getCardTransform = (cardId: number) => {
   const transform = cardTransforms.value[cardId];
   if (!transform) return {};
   
   return {
     transform: `perspective(1000px) rotateX(${transform.rotateX}deg) rotateY(${transform.rotateY}deg) scale(${transform.scale})`,
-    'transform-style': 'preserve-3d'
-  };
+    '--transform-style': 'preserve-3d'
+  } as const;
 };
 
 // Lifecycle
@@ -1022,7 +1022,7 @@ onMounted(() => {
   height: 320px;
   display: flex;
   flex-direction: column;
-  transform-style: preserve-3d;
+  transform-style: var(--transform-style, flat);
   perspective: 1000px;
 }
 
