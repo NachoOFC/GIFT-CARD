@@ -49,7 +49,7 @@
     <nav class="main-nav">
       <div class="nav-container">
         <div class="logo">
-          <div class="logo-square">GIFT CARD</div>
+          <div class="logo-square">GIFT CARD Nacho</div>
           <span class="logo-text">Plataforma Digital</span>
         </div>
         
