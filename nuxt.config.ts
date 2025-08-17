@@ -13,5 +13,9 @@ export default defineNuxtConfig({
   experimental: {
     payloadExtraction: false
   },
-  
+
+  devServer: {
+    host: '0.0.0.0', // Permite conexiones externas
+    port: 3000
+  }
 })
