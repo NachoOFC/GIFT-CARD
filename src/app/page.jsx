@@ -2,30 +2,14 @@
 
 import { useState } from 'react'
 
-interface Category {
-  id: string
-  name: string
-  icon: string
-  count: number
-}
-
-interface GiftCard {
-  id: string
-  name: string
-  company: string
-  image: string
-  price: number
-  category: string
-  rating: number
-  reviews: number
-}
-
 export default function HomePage() {
-  const [activeTab, setActiveTab] = useState<'personas' | 'empresas'>('personas')
-  const [selectedCategory, setSelectedCategory] = useState<string>('all')
+  const [activeTab, setActiveTab] = useState('personas')
+  const [selectedCategory, setSelectedCategory] = useState('all')
   const [userPoints] = useState(1250)
+  const [cartItems, setCartItems] = useState([])
+  const [showCartMessage, setShowCartMessage] = useState(null)
 
-  const categories: Category[] = [
+  const categories = [
     { id: 'all', name: 'Todas', icon: '🎁', count: 156 },
     { id: 'restaurants', name: 'Restaurantes', icon: '🍽️', count: 45 },
     { id: 'shopping', name: 'Compras', icon: '🛍️', count: 32 },
@@ -37,7 +21,7 @@ export default function HomePage() {
     { id: 'education', name: 'Educación', icon: '📚', count: 12 }
   ]
 
-  const giftCards: GiftCard[] = [
+  const giftCards = [
     {
       id: '1',
       name: 'Gift Card Starbucks',
@@ -80,7 +64,7 @@ export default function HomePage() {
     }
   ]
 
-  const getCategoryCount = (categoryId: string) => {
+  const getCategoryCount = (categoryId) => {
     if (categoryId === 'all') return giftCards.length
     return giftCards.filter(card => card.category === categoryId).length
   }
@@ -89,8 +73,43 @@ export default function HomePage() {
     ? giftCards 
     : giftCards.filter(card => card.category === selectedCategory)
 
+  const addToCart = (giftCard) => {
+    const existingItem = cartItems.find(item => item.id === giftCard.id)
+    
+    if (existingItem) {
+      setCartItems(cartItems.map(item => 
+        item.id === giftCard.id 
+          ? { ...item, quantity: item.quantity + 1 }
+          : item
+      ))
+    } else {
+      setCartItems([...cartItems, { 
+        id: giftCard.id, 
+        name: giftCard.name, 
+        company: giftCard.company, 
+        price: giftCard.price, 
+        quantity: 1 
+      }])
+    }
+    
+    // Mostrar mensaje de confirmación
+    setShowCartMessage(`${giftCard.name} agregado al carrito!`)
+    setTimeout(() => setShowCartMessage(null), 2000)
+  }
+
+  const getCartTotal = () => {
+    return cartItems.reduce((total, item) => total + (item.price * item.quantity), 0)
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Mensaje de confirmación del carrito */}
+      {showCartMessage && (
+        <div className="fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 animate-bounce">
+          {showCartMessage}
+        </div>
+      )}
+
       {/* Header Superior */}
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -138,8 +157,13 @@ export default function HomePage() {
               <button className="p-2 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100">
                 <span className="text-lg">👤</span>
               </button>
-              <button className="p-2 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100">
+              <button className="p-2 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100 relative">
                 <span className="text-lg">🛒</span>
+                {cartItems.length > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    {cartItems.reduce((total, item) => total + item.quantity, 0)}
+                  </span>
+                )}
               </button>
             </div>
           </div>
@@ -261,8 +285,11 @@ export default function HomePage() {
                       </span>
                     </div>
                     
-                    <button className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
-                      Agregar al carrito
+                    <button 
+                      onClick={() => window.location.href = `/configurar?id=${card.id}`}
+                      className="w-full bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition-colors"
+                    >
+                      Configurar Gift Card
                     </button>
                   </div>
                 </div>
