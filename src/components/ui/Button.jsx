@@ -1,18 +1,10 @@
-interface ButtonProps {
-  children: React.ReactNode
-  onClick?: () => void
-  variant?: 'primary' | 'secondary' | 'outline'
-  size?: 'sm' | 'md' | 'lg'
-  className?: string
-}
-
 export default function Button({ 
   children, 
   onClick, 
   variant = 'primary', 
   size = 'md',
   className = '' 
-}: ButtonProps) {
+}) {
   const baseClasses = 'rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2'
   
   const variants = {
