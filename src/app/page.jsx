@@ -1,6 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+
+import CreateGiftCardForm from '@/components/gift-cards/CreateGiftCardForm'
 
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState('personas')
@@ -8,70 +10,70 @@ export default function HomePage() {
   const [userPoints] = useState(1250)
   const [cartItems, setCartItems] = useState([])
   const [showCartMessage, setShowCartMessage] = useState(null)
+  const [giftCards, setGiftCards] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [showCreateForm, setShowCreateForm] = useState(false)
 
   const categories = [
-    { id: 'all', name: 'Todas', icon: '🎁', count: 156 },
-    { id: 'restaurants', name: 'Restaurantes', icon: '🍽️', count: 45 },
-    { id: 'shopping', name: 'Compras', icon: '🛍️', count: 32 },
-    { id: 'entertainment', name: 'Entretenimiento', icon: '🎬', count: 28 },
-    { id: 'travel', name: 'Viajes', icon: '✈️', count: 19 },
-    { id: 'services', name: 'Servicios', icon: '🔧', count: 22 },
-    { id: 'technology', name: 'Tecnología', icon: '💻', count: 15 },
-    { id: 'health', name: 'Salud', icon: '🏥', count: 18 },
-    { id: 'education', name: 'Educación', icon: '📚', count: 12 }
+    { id: 'all', name: 'Todas', icon: '🎁', count: 0 },
+    { id: 'restaurants', name: 'Restaurantes', icon: '🍽️', count: 0 },
+    { id: 'shopping', name: 'Compras', icon: '🛍️', count: 0 },
+    { id: 'entertainment', name: 'Entretenimiento', icon: '🎬', count: 0 },
+    { id: 'travel', name: 'Viajes', icon: '✈️', count: 0 },
+    { id: 'services', name: 'Servicios', icon: '🔧', count: 0 },
+    { id: 'technology', name: 'Tecnología', icon: '💻', count: 0 },
+    { id: 'health', name: 'Salud', icon: '🏥', count: 0 },
+    { id: 'education', name: 'Educación', icon: '📚', count: 0 }
   ]
 
-  const giftCards = [
-    {
-      id: '1',
-      name: 'Gift Card Starbucks',
-      company: 'Starbucks',
-      image: '/api/placeholder/200/150',
-      price: 25000,
-      category: 'restaurants',
-      rating: 4.8,
-      reviews: 1247
-    },
-    {
-      id: '2',
-      name: 'Gift Card Amazon',
-      company: 'Amazon',
-      image: '/api/placeholder/200/150',
-      price: 50000,
-      category: 'shopping',
-      rating: 4.9,
-      reviews: 2156
-    },
-    {
-      id: '3',
-      name: 'Gift Card Netflix',
-      company: 'Netflix',
-      image: '/api/placeholder/200/150',
-      price: 15000,
-      category: 'entertainment',
-      rating: 4.7,
-      reviews: 892
-    },
-    {
-      id: '4',
-      name: 'Gift Card Uber',
-      company: 'Uber',
-      image: '/api/placeholder/200/150',
-      price: 20000,
-      category: 'services',
-      rating: 4.6,
-      reviews: 1567
+  useEffect(() => {
+    fetchGiftCards()
+  }, [])
+
+  const fetchGiftCards = async () => {
+    try {
+      const response = await fetch('/api/gift-cards')
+      const data = await response.json()
+      if (data.success) {
+        // Mapear tarjetas directamente y asignar categoría 'all' para ignorar la lógica de categorías
+        setGiftCards(data.data.map(card => ({
+          id: card.id.toString(),
+          // usar id en el título para consistencia y evitar mostrar números crudos de empresa
+          name: `Gift Card ${card.id}`,
+          // normalizar company: si es numérico mostrar "Empresa <n>", si es texto mostrarlo, si es null usar etiqueta genérica
+          company: (card.empresa === null || card.empresa === undefined)
+            ? 'Empresa'
+            : (!isNaN(Number(card.empresa)) ? `Empresa ${card.empresa}` : String(card.empresa)),
+          image: '/api/placeholder/200/150',
+          price: card.valor_inicial,
+          balance: card.saldo_actual,
+          category: 'all', // ignorar categorías por simplicidad
+          rating: 5.0,
+          reviews: 0,
+          active: card.activa,
+          expirationDate: new Date(card.fecha_expiracion),
+          message: card.mensaje,
+          recipientEmail: card.email_destinatario
+        })))
+        setError(null)
+      } else {
+        setError(data.message || 'Error al cargar las gift cards')
+      }
+    } catch (err) {
+      setError('Error al conectar con el servidor')
+    } finally {
+      setLoading(false)
     }
-  ]
+  }
 
   const getCategoryCount = (categoryId) => {
     if (categoryId === 'all') return giftCards.length
     return giftCards.filter(card => card.category === categoryId).length
   }
 
-  const filteredGiftCards = selectedCategory === 'all' 
-    ? giftCards 
-    : giftCards.filter(card => card.category === selectedCategory)
+  // Mostrar siempre todas las gift cards sin filtrar
+  const filteredGiftCards = giftCards
 
   const addToCart = (giftCard) => {
     const existingItem = cartItems.find(item => item.id === giftCard.id)
@@ -142,10 +144,10 @@ export default function HomePage() {
             </div>
             
             <div className="flex items-center space-x-6">
-              <a href="#" className="flex items-center space-x-2 text-gray-600 hover:text-gray-900">
-                <span className="text-lg">❓</span>
-                <span>Centro de ayuda</span>
+              <a href="/gift-cards" className="hidden md:inline-block bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
+                Gestionar Gift Cards
               </a>
+             
               <a href="#" className="flex items-center space-x-2 text-gray-600 hover:text-gray-900">
                 <span className="text-lg">💰</span>
                 <span>Consulta tu saldo</span>
@@ -253,12 +255,8 @@ export default function HomePage() {
           {/* Contenido Principal */}
           <main className="flex-1">
             <div className="mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">
-                {selectedCategory === 'all' ? 'Todas las Gift Cards' : categories.find(c => c.id === selectedCategory)?.name}
-              </h2>
-              <p className="text-gray-600 mt-2">
-                {filteredGiftCards.length} gift cards disponibles
-              </p>
+              <h2 className="text-2xl font-bold text-gray-900">Todas las Gift Cards</h2>
+              <p className="text-gray-600 mt-2">{giftCards.length} gift cards disponibles</p>
             </div>
 
             {/* Grid de Gift Cards */}
