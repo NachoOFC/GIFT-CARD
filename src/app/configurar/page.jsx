@@ -155,7 +155,7 @@ export default function ConfigurarPage() {
       addToCart(cartItem)
       
       showValidationMessage('¡Gift Card agregada al carrito exitosamente!', 'success')
-      setIsConfigured(true)
+    setIsConfigured(true)
     } catch (error) {
       console.error('Error adding to cart:', error)
       showValidationMessage('Error al agregar al carrito. Inténtalo de nuevo.', 'error')
@@ -306,26 +306,26 @@ export default function ConfigurarPage() {
               <h1 className="text-2xl font-bold text-gray-700">Configurar Gift Card</h1>
             </div>
             
-                         <div className="flex items-center gap-4">
-               <div className="flex items-center gap-2 bg-yellow-100 px-3 py-2 rounded-lg">
-                 <span className="text-lg">⭐</span>
-                 <span className="text-yellow-800 font-medium">{userPoints} pts</span>
-               </div>
-               <button className="p-2 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100">
-                 <span className="text-lg">👤</span>
-               </button>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 bg-yellow-100 px-3 py-2 rounded-lg">
+                <span className="text-lg">⭐</span>
+                <span className="text-yellow-800 font-medium">{userPoints} pts</span>
+              </div>
+              <button className="p-2 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100">
+                <span className="text-lg">👤</span>
+              </button>
                <a 
                  href="/cart"
                  className="p-2 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100 relative"
                >
-                 <span className="text-lg">🛒</span>
+                <span className="text-lg">🛒</span>
                  {cartCount > 0 && (
                    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                      {cartCount}
                    </span>
                  )}
                </a>
-             </div>
+            </div>
           </div>
         </div>
       </header>
@@ -346,36 +346,36 @@ export default function ConfigurarPage() {
                     <span className="ml-2 text-gray-600">Cargando gift card...</span>
                   </div>
                 ) : selectedGiftCard ? (
-                  <div className="flex gap-5 items-center p-5 bg-gray-50 rounded-lg">
+              <div className="flex gap-5 items-center p-5 bg-gray-50 rounded-lg">
                     <div className={`relative w-32 h-20 ${selectedGiftCard.background_color} rounded-lg flex items-center justify-center`}>
                       <div className={`absolute top-1 left-1 ${selectedGiftCard.badge_color} text-gray-900 px-2 py-1 rounded text-xs font-bold`}>
-                        FULL
-                      </div>
-                      <div className="absolute top-1 right-1 bg-black bg-opacity-70 text-white px-3 py-1 rounded text-xs">
-                        GIFT CARD
-                      </div>
-                      <span className="text-3xl">{selectedGiftCard.icon}</span>
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                        {selectedGiftCard.title}
-                      </h3>
-                      <p className="text-gray-600 mb-3">
-                        {selectedGiftCard.category_name}
-                      </p>
-                      <div className="flex gap-2">
-                        <span className="px-3 py-1 bg-gray-200 text-gray-700 rounded-full text-xs font-semibold">
-                          {selectedGiftCard.category_name}
-                        </span>
-                        <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold border border-green-200">
-                          {selectedGiftCard.stock}
-                        </span>
-                        <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold border border-blue-200">
-                          SKU: {selectedGiftCard.sku}
-                        </span>
-                      </div>
-                    </div>
+                    FULL
                   </div>
+                  <div className="absolute top-1 right-1 bg-black bg-opacity-70 text-white px-3 py-1 rounded text-xs">
+                    GIFT CARD
+                  </div>
+                      <span className="text-3xl">{selectedGiftCard.icon}</span>
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                        {selectedGiftCard.title}
+                  </h3>
+                  <p className="text-gray-600 mb-3">
+                        {selectedGiftCard.category_name}
+                  </p>
+                  <div className="flex gap-2">
+                    <span className="px-3 py-1 bg-gray-200 text-gray-700 rounded-full text-xs font-semibold">
+                          {selectedGiftCard.category_name}
+                    </span>
+                    <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold border border-green-200">
+                          {selectedGiftCard.stock}
+                    </span>
+                    <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold border border-blue-200">
+                          SKU: {selectedGiftCard.sku}
+                    </span>
+                  </div>
+                </div>
+              </div>
                 ) : (
                   <div className="text-center p-8 text-gray-500">
                     No se pudo cargar la gift card
@@ -708,16 +708,16 @@ export default function ConfigurarPage() {
             </button>
 
                          {/* Botón Ver Carrito (después de configurar) */}
-             {isConfigured && (
+            {isConfigured && (
                <div className="space-y-3">
-                 <button 
-                   onClick={() => {
+              <button 
+                onClick={() => {
                      showValidationMessage('¡Gift Card agregada al carrito!', 'success')
                      setTimeout(() => window.location.href = '/cart', 1000)
-                   }}
-                   className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors text-base font-semibold flex items-center justify-center gap-2"
-                 >
-                   <span>🛒</span>
+                }}
+                className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors text-base font-semibold flex items-center justify-center gap-2"
+              >
+                <span>🛒</span>
                    Ver Carrito
                  </button>
                  
@@ -729,9 +729,9 @@ export default function ConfigurarPage() {
                  >
                    <span>🏠</span>
                    Seguir Comprando
-                 </button>
+              </button>
                </div>
-             )}
+            )}
           </div>
 
           {/* Panel Derecho - Preview y Resumen */}
@@ -742,21 +742,21 @@ export default function ConfigurarPage() {
                 <>
                   <div className={`relative h-48 ${selectedGiftCard.background_color} flex items-center justify-center`}>
                     <div className={`absolute top-4 left-4 ${selectedGiftCard.badge_color} text-gray-900 px-3 py-1 rounded text-sm font-bold`}>
-                      FULL
-                    </div>
-                    <div className="absolute top-4 right-4 bg-black bg-opacity-70 text-white px-3 py-1 rounded text-sm">
-                      GIFT CARD
-                    </div>
+                  FULL
+                </div>
+                <div className="absolute top-4 right-4 bg-black bg-opacity-70 text-white px-3 py-1 rounded text-sm">
+                  GIFT CARD
+                </div>
                     <span className="text-6xl">{selectedGiftCard.icon}</span>
-                  </div>
-                  <div className="p-5 text-center">
-                    <div className="text-2xl font-bold text-gray-900 mb-2">
+              </div>
+              <div className="p-5 text-center">
+                <div className="text-2xl font-bold text-gray-900 mb-2">
                       {formatCurrency(amount)}
-                    </div>
-                    <div className="text-gray-600">
+                </div>
+                <div className="text-gray-600">
                       {customMessage || selectedGiftCard.description}
-                    </div>
-                  </div>
+                </div>
+              </div>
                 </>
               ) : (
                 <div className="h-48 bg-gray-200 flex items-center justify-center">

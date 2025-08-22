@@ -1,4 +1,5 @@
 import pool from '@/utils/db';
+import webpayService from '@/services/webpayService';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -6,31 +7,66 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { orderId, amount } = req.body;
+    const { orderId, amount, items, customerName, customerEmail } = req.body;
 
-    if (!orderId || !amount) {
-      return res.status(400).json({ message: 'Se requieren orderId y amount' });
+    if (!orderId || !amount || !items) {
+      return res.status(400).json({ 
+        success: false,
+        message: 'Se requieren orderId, amount e items' 
+      });
     }
 
     const connection = await pool.getConnection();
 
     try {
-      // Aquí puedes agregar la lógica para procesar el pago
-      // Por ejemplo, actualizar el estado de la orden en la base de datos
-
       await connection.beginTransaction();
 
-      // Ejemplo de actualización de una orden
-      await connection.execute(
-        'UPDATE ordenes SET estado = ?, fecha_pago = NOW() WHERE id = ?',
-        ['PAGADA', orderId]
+      // Preparar datos para WebPay
+      const orderData = {
+        orderId,
+        totalAmount: amount,
+        items: items.map(item => ({
+          id: item.id,
+          quantity: item.quantity,
+          price: item.price,
+          title: item.title
+        })),
+        customerName: customerName || 'Cliente Web',
+        customerEmail: customerEmail || 'cliente@web.com'
+      };
+
+      // Iniciar pago con WebPay
+      const paymentResult = await webpayService.initiateWebPayPayment(orderData);
+
+      // Guardar información de la transacción en la base de datos
+      // Primero verificar si la orden existe, si no, crearla
+      const [existingOrder] = await connection.execute(
+        'SELECT id FROM orders WHERE numero_orden = ?',
+        [orderId]
       );
+
+      if (existingOrder.length === 0) {
+        // Crear nueva orden
+        await connection.execute(
+          'INSERT INTO orders (numero_orden, estado, webpay_token, fecha_orden, total, email_comprador, nombre_comprador) VALUES (?, ?, ?, NOW(), ?, ?, ?)',
+          [orderId, 'pendiente', paymentResult.webpayResponse.token, amount, orderData.customerEmail, orderData.customerName]
+        );
+      } else {
+        // Actualizar orden existente
+        await connection.execute(
+          'UPDATE orders SET estado = ?, webpay_token = ?, fecha_orden = NOW(), total = ? WHERE numero_orden = ?',
+          ['pendiente', paymentResult.webpayResponse.token, amount, orderId]
+        );
+      }
 
       await connection.commit();
 
       return res.status(200).json({ 
         success: true, 
-        message: 'Pago procesado correctamente'
+        message: 'Pago iniciado correctamente',
+        redirectUrl: paymentResult.redirectUrl,
+        token: paymentResult.webpayResponse.token,
+        buyOrder: paymentResult.webpayResponse.buy_order
       });
 
     } catch (error) {
@@ -44,7 +80,7 @@ export default async function handler(req, res) {
     console.error('Error al procesar el pago:', error);
     return res.status(500).json({ 
       success: false, 
-      message: 'Error al procesar el pago' 
+      message: 'Error al procesar el pago: ' + error.message
     });
   }
 }

@@ -186,10 +186,11 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold text-lg">
-                GIFT CARD
-              </div>
-              <span className="text-gray-600 text-sm">Plataforma Digital</span>
+              <img 
+                src="/logo/mline.jpg" 
+                alt="MLine Logo" 
+                className="h-24 w-auto object-contain"
+              />
             </div>
 
             <div className="flex-1 max-w-2xl mx-8">

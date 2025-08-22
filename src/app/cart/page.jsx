@@ -27,25 +27,52 @@ export default function CartPage() {
     setIsProcessing(true)
     
     try {
-      // Simular proceso de pago
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      
-      // Aquí iría la lógica real de pago
-      console.log('Procesando pago:', {
-        items: cartItems,
-        total: getCartGrandTotal(),
-        paymentMethod
-      })
-      
-      // Limpiar carrito después del pago exitoso
-      clearCart()
-      
-      // Redirigir a página de éxito
-      window.location.href = '/payment-success'
+      if (paymentMethod === 'webpay') {
+        // Procesar pago con WebPay
+        const orderId = `ORDER_${Date.now()}`
+        
+        const response = await fetch('/api/procesar-pago', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            orderId,
+            amount: getCartGrandTotal(),
+            items: cartItems,
+            customerName: 'Cliente Web', // Aquí podrías obtener del formulario
+            customerEmail: 'cliente@web.com' // Aquí podrías obtener del formulario
+          })
+        })
+
+        const result = await response.json()
+
+        if (result.success) {
+          // Redirigir a WebPay
+          window.location.href = result.redirectUrl
+        } else {
+          throw new Error(result.message || 'Error al iniciar el pago')
+        }
+      } else {
+        // Simular proceso de pago para otros métodos
+        await new Promise(resolve => setTimeout(resolve, 2000))
+        
+        console.log('Procesando pago:', {
+          items: cartItems,
+          total: getCartGrandTotal(),
+          paymentMethod
+        })
+        
+        // Limpiar carrito después del pago exitoso
+        clearCart()
+        
+        // Redirigir a página de éxito
+        window.location.href = '/payment-success'
+      }
       
     } catch (error) {
       console.error('Error en el pago:', error)
-      alert('Error al procesar el pago. Inténtalo de nuevo.')
+      alert('Error al procesar el pago: ' + error.message)
     } finally {
       setIsProcessing(false)
     }
