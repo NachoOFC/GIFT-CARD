@@ -1,8 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useCart } from '@/contexts/CartContext'
+
 
 export default function ConfigurarPage() {
+  const { addToCart, cartCount } = useCart()
+  
   // Estado principal
   const [activeTab, setActiveTab] = useState('personas')
   const [quantity, setQuantity] = useState(1)
@@ -15,7 +19,7 @@ export default function ConfigurarPage() {
   const [loadMethod, setLoadMethod] = useState('manual')
   const [isDragOver, setIsDragOver] = useState(false)
   const [validationMessage, setValidationMessage] = useState({ text: '', type: 'info' })
-  const [userPoints] = useState(1250)
+  const [userPoints] = useState(0)
   const [isConfigured, setIsConfigured] = useState(false)
 
   // Beneficiarios
@@ -28,12 +32,10 @@ export default function ConfigurarPage() {
     specialEvents: ''
   })
 
-  // Gift Card seleccionada (simulada)
-  const [selectedGiftCard] = useState({
-    id: '1',
-    title: 'Gift Card Explosión de Juegos',
-    category: 'todas'
-  })
+  // Gift Card seleccionada desde BD
+  const [selectedGiftCard, setSelectedGiftCard] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
 
   // Cálculos computados
   const subtotal = quantity * amount
@@ -48,31 +50,7 @@ export default function ConfigurarPage() {
     ? 'Listo para configurar para ti mismo' 
     : 'Listo para configurar'
 
-  // Sistema de Puntos
-  const calculatePoints = () => {
-    return Math.floor(total / 100)
-  }
 
-  const calculateCategoryBonus = () => {
-    const categoryBonus = {
-      'todas': 50,
-      'agradecimiento': 75,
-      'amistad': 60,
-      'amor': 100,
-      'baby-shower': 80,
-      'cumpleanos': 90,
-      'felicidades': 70,
-      'moda': 85,
-      'compromiso': 95
-    }
-    
-    const category = selectedGiftCard?.category || 'todas'
-    return categoryBonus[category] || 50
-  }
-
-  const totalPoints = () => {
-    return calculatePoints() + calculateCategoryBonus()
-  }
 
   // Métodos
   const goBack = () => {
@@ -151,24 +129,42 @@ export default function ConfigurarPage() {
     window.URL.revokeObjectURL(url)
   }
 
-  const processOrder = () => {
+  const processOrder = async () => {
     if (!validateOrder()) {
       return
     }
     
-    if (beneficiaries.length === 0) {
-      showValidationMessage('¡Gift Card configurada exitosamente!', 'success')
-    } else {
-      showValidationMessage('¡Gift Card configurada exitosamente!', 'success')
+    try {
+      // Crear item para el carrito
+      const cartItem = {
+        id: selectedGiftCard?.id,
+        title: selectedGiftCard?.title,
+        sku: selectedGiftCard?.sku,
+        price: amount,
+        quantity: quantity,
+        customMessage: customMessage,
+        additionalText: additionalText,
+        startDate: startDate,
+        endDate: endDate,
+        recipient: recipient,
+        beneficiaries: beneficiaries,
+        giftCardData: selectedGiftCard
+      }
+
+      // Agregar al carrito
+      addToCart(cartItem)
+      
+      showValidationMessage('¡Gift Card agregada al carrito exitosamente!', 'success')
+      setIsConfigured(true)
+    } catch (error) {
+      console.error('Error adding to cart:', error)
+      showValidationMessage('Error al agregar al carrito. Inténtalo de nuevo.', 'error')
     }
-    
-    // Marcar como configurado para mostrar el botón de agregar al carrito
-    setIsConfigured(true)
   }
 
   const validateOrder = () => {
-    if (!amount || amount < 5000) {
-      showValidationMessage('El monto mínimo es $5.000.', 'error')
+    if (!amount || amount < 5) {
+      showValidationMessage('El monto mínimo es $5CLP', 'error')
       return false
     }
     return true
@@ -213,11 +209,66 @@ export default function ConfigurarPage() {
     const nextYear = new Date()
     nextYear.setFullYear(today.getFullYear() + 1)
     setEndDate(nextYear.toISOString().split('T')[0])
+
+    // Cargar gift card desde BD real
+    const loadGiftCard = async () => {
+      try {
+        setLoading(true)
+        // Obtener ID de la URL
+        const urlParams = new URLSearchParams(window.location.search)
+        const giftCardId = urlParams.get('id')
+        
+        if (!giftCardId) {
+          setError('No se especificó ID de gift card')
+          return
+        }
+
+        // Obtener de BD real usando la API que ya funciona
+        const response = await fetch(`/api/gift-cards`)
+        const data = await response.json()
+        
+        if (data.success) {
+          // Buscar la gift card por ID
+          const giftCard = data.data.find(card => card.id.toString() === giftCardId)
+          
+          if (giftCard) {
+            // Mapear los datos de la BD al formato que espera la UI
+            const mappedGiftCard = {
+              id: giftCard.id.toString(),
+              title: `Gift Card ${giftCard.id}`,
+              category: 'todas',
+              category_name: 'Toda ocasión',
+              sku: giftCard.codigo || `GC-${giftCard.id}`,
+              stock: giftCard.activa ? 'EN STOCK' : 'SIN STOCK',
+              price: giftCard.valor_inicial,
+              icon: '🎁',
+              background_color: 'bg-green-500',
+              badge_color: 'bg-yellow-400',
+              description: giftCard.mensaje || 'Tu regalo perfecto te está esperando'
+            }
+            setSelectedGiftCard(mappedGiftCard)
+            // Establecer el monto por defecto
+            setAmount(giftCard.valor_inicial)
+          } else {
+            setError('Gift card no encontrada')
+          }
+        } else {
+          setError('Error al cargar gift cards')
+        }
+      } catch (error) {
+        console.error('Error loading gift card:', error)
+        setError('Error al conectar con el servidor')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadGiftCard()
   }, [])
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Mensaje de validación */}
+      {/* Mensajes de validación y error */}
       {validationMessage.text && (
         <div className={`fixed top-4 right-4 px-4 py-2 rounded-lg shadow-lg z-50 ${
           validationMessage.type === 'success' ? 'bg-green-500 text-white' :
@@ -229,6 +280,13 @@ export default function ConfigurarPage() {
              validationMessage.type === 'error' ? '❌' : 'ℹ️'}
           </span>
           {validationMessage.text}
+        </div>
+      )}
+
+      {error && (
+        <div className="fixed top-4 left-4 px-4 py-2 rounded-lg shadow-lg z-50 bg-red-500 text-white">
+          <span className="mr-2">❌</span>
+          {error}
         </div>
       )}
 
@@ -248,18 +306,26 @@ export default function ConfigurarPage() {
               <h1 className="text-2xl font-bold text-gray-700">Configurar Gift Card</h1>
             </div>
             
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 bg-yellow-100 px-3 py-2 rounded-lg">
-                <span className="text-lg">⭐</span>
-                <span className="text-yellow-800 font-medium">{userPoints} pts</span>
-              </div>
-              <button className="p-2 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100">
-                <span className="text-lg">👤</span>
-              </button>
-              <button className="p-2 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100">
-                <span className="text-lg">🛒</span>
-              </button>
-            </div>
+                         <div className="flex items-center gap-4">
+               <div className="flex items-center gap-2 bg-yellow-100 px-3 py-2 rounded-lg">
+                 <span className="text-lg">⭐</span>
+                 <span className="text-yellow-800 font-medium">{userPoints} pts</span>
+               </div>
+               <button className="p-2 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100">
+                 <span className="text-lg">👤</span>
+               </button>
+               <a 
+                 href="/cart"
+                 className="p-2 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100 relative"
+               >
+                 <span className="text-lg">🛒</span>
+                 {cartCount > 0 && (
+                   <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                     {cartCount}
+                   </span>
+                 )}
+               </a>
+             </div>
           </div>
         </div>
       </header>
@@ -274,36 +340,47 @@ export default function ConfigurarPage() {
                 Gift Card Seleccionada
               </h2>
               
-              <div className="flex gap-5 items-center p-5 bg-gray-50 rounded-lg">
-                <div className="relative w-32 h-20 bg-green-500 rounded-lg flex items-center justify-center">
-                  <div className="absolute top-1 left-1 bg-yellow-400 text-gray-900 px-2 py-1 rounded text-xs font-bold">
-                    FULL
+                              {loading ? (
+                  <div className="flex items-center justify-center p-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
+                    <span className="ml-2 text-gray-600">Cargando gift card...</span>
                   </div>
-                  <div className="absolute top-1 right-1 bg-black bg-opacity-70 text-white px-3 py-1 rounded text-xs">
-                    GIFT CARD
+                ) : selectedGiftCard ? (
+                  <div className="flex gap-5 items-center p-5 bg-gray-50 rounded-lg">
+                    <div className={`relative w-32 h-20 ${selectedGiftCard.background_color} rounded-lg flex items-center justify-center`}>
+                      <div className={`absolute top-1 left-1 ${selectedGiftCard.badge_color} text-gray-900 px-2 py-1 rounded text-xs font-bold`}>
+                        FULL
+                      </div>
+                      <div className="absolute top-1 right-1 bg-black bg-opacity-70 text-white px-3 py-1 rounded text-xs">
+                        GIFT CARD
+                      </div>
+                      <span className="text-3xl">{selectedGiftCard.icon}</span>
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                        {selectedGiftCard.title}
+                      </h3>
+                      <p className="text-gray-600 mb-3">
+                        {selectedGiftCard.category_name}
+                      </p>
+                      <div className="flex gap-2">
+                        <span className="px-3 py-1 bg-gray-200 text-gray-700 rounded-full text-xs font-semibold">
+                          {selectedGiftCard.category_name}
+                        </span>
+                        <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold border border-green-200">
+                          {selectedGiftCard.stock}
+                        </span>
+                        <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold border border-blue-200">
+                          SKU: {selectedGiftCard.sku}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                  <span className="text-3xl">🎮</span>
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    {selectedGiftCard?.title || 'Gift Card Explosión de Juegos'}
-                  </h3>
-                  <p className="text-gray-600 mb-3">
-                    {getCategoryName(selectedGiftCard?.category)}
-                  </p>
-                  <div className="flex gap-2">
-                    <span className="px-3 py-1 bg-gray-200 text-gray-700 rounded-full text-xs font-semibold">
-                      {getCategoryName(selectedGiftCard?.category)}
-                    </span>
-                    <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold border border-green-200">
-                      EN STOCK
-                    </span>
-                    <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold border border-blue-200">
-                      SKU: 30000085
-                    </span>
+                ) : (
+                  <div className="text-center p-8 text-gray-500">
+                    No se pudo cargar la gift card
                   </div>
-                </div>
-              </div>
+                )}
             </div>
 
             {/* Paso 2: Configurar Gift Card */}
@@ -322,14 +399,11 @@ export default function ConfigurarPage() {
                     onChange={(e) => setAmount(Number(e.target.value))}
                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                   >
-                    <option value={5000}>$5.000</option>
-                    <option value={10000}>$10.000</option>
-                    <option value={15000}>$15.000</option>
-                    <option value={20000}>$20.000</option>
-                    <option value={25000}>$25.000</option>
-                    <option value={30000}>$30.000</option>
-                    <option value={50000}>$50.000</option>
-                    <option value={100000}>$100.000</option>
+                    {selectedGiftCard && (
+                      <option value={selectedGiftCard.price}>
+                        ${selectedGiftCard.price.toLocaleString()}
+                      </option>
+                    )}
                   </select>
                 </div>
 
@@ -633,44 +707,62 @@ export default function ConfigurarPage() {
               {processButtonText}
             </button>
 
-            {/* Botón Agregar al Carrito (después de configurar) */}
-            {isConfigured && (
-              <button 
-                onClick={() => {
-                  // Aquí agregarías la gift card configurada al carrito
-                  showValidationMessage('¡Gift Card configurada agregada al carrito!', 'success')
-                  // Redirigir al carrito o página principal
-                  setTimeout(() => window.location.href = '/', 2000)
-                }}
-                className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors text-base font-semibold flex items-center justify-center gap-2"
-              >
-                <span>🛒</span>
-                Agregar al Carrito
-              </button>
-            )}
+                         {/* Botón Ver Carrito (después de configurar) */}
+             {isConfigured && (
+               <div className="space-y-3">
+                 <button 
+                   onClick={() => {
+                     showValidationMessage('¡Gift Card agregada al carrito!', 'success')
+                     setTimeout(() => window.location.href = '/cart', 1000)
+                   }}
+                   className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors text-base font-semibold flex items-center justify-center gap-2"
+                 >
+                   <span>🛒</span>
+                   Ver Carrito
+                 </button>
+                 
+                 <button 
+                   onClick={() => {
+                     window.location.href = '/'
+                   }}
+                   className="w-full bg-gray-600 text-white py-3 px-6 rounded-lg hover:bg-gray-700 transition-colors text-base font-semibold flex items-center justify-center gap-2"
+                 >
+                   <span>🏠</span>
+                   Seguir Comprando
+                 </button>
+               </div>
+             )}
           </div>
 
           {/* Panel Derecho - Preview y Resumen */}
           <div className="space-y-6">
             {/* Preview de Gift Card Seleccionada */}
             <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-              <div className="relative h-48 bg-green-500 flex items-center justify-center">
-                <div className="absolute top-4 left-4 bg-yellow-400 text-gray-900 px-3 py-1 rounded text-sm font-bold">
-                  FULL
+              {selectedGiftCard ? (
+                <>
+                  <div className={`relative h-48 ${selectedGiftCard.background_color} flex items-center justify-center`}>
+                    <div className={`absolute top-4 left-4 ${selectedGiftCard.badge_color} text-gray-900 px-3 py-1 rounded text-sm font-bold`}>
+                      FULL
+                    </div>
+                    <div className="absolute top-4 right-4 bg-black bg-opacity-70 text-white px-3 py-1 rounded text-sm">
+                      GIFT CARD
+                    </div>
+                    <span className="text-6xl">{selectedGiftCard.icon}</span>
+                  </div>
+                  <div className="p-5 text-center">
+                    <div className="text-2xl font-bold text-gray-900 mb-2">
+                      {formatCurrency(amount)}
+                    </div>
+                    <div className="text-gray-600">
+                      {customMessage || selectedGiftCard.description}
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="h-48 bg-gray-200 flex items-center justify-center">
+                  <span className="text-gray-500">Cargando...</span>
                 </div>
-                <div className="absolute top-4 right-4 bg-black bg-opacity-70 text-white px-3 py-1 rounded text-sm">
-                  GIFT CARD
-                </div>
-                <span className="text-6xl">🎮</span>
-              </div>
-              <div className="p-5 text-center">
-                <div className="text-2xl font-bold text-gray-900 mb-2">
-                  {formatCurrency(amount || 10000)}
-                </div>
-                <div className="text-gray-600">
-                  {customMessage || 'Tu regalo perfecto te está esperando'}
-                </div>
-              </div>
+              )}
             </div>
 
             {/* Resumen de compra */}
@@ -684,7 +776,7 @@ export default function ConfigurarPage() {
                 </div>
                 <div className="flex justify-between">
                   <span>Valor unitario:</span>
-                  <span>{formatCurrency(amount || 10000)}</span>
+                  <span>{formatCurrency(amount)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Beneficiarios:</span>
@@ -704,33 +796,7 @@ export default function ConfigurarPage() {
                 </div>
               </div>
 
-              {/* Sistema de Puntos */}
-              <div className="border-t pt-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="text-xl">⭐</span>
-                  <span className="font-semibold text-gray-900">Puntos a Ganar</span>
-                </div>
-                <div className="space-y-2 mb-3">
-                  <div className="flex justify-between">
-                    <span>Puntos por compra:</span>
-                    <span className="text-green-600 font-semibold">{calculatePoints()}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Puntos por categoría:</span>
-                    <span className="text-green-600 font-semibold">+{calculateCategoryBonus()}</span>
-                  </div>
-                  <div className="flex justify-between border-t pt-2 font-bold">
-                    <span>Total de puntos:</span>
-                    <span className="text-green-600 text-lg">{totalPoints()}</span>
-                  </div>
-                </div>
-                <div className="text-sm text-gray-600 space-y-1">
-                  <p>🎁 <strong>¡Gana puntos con cada compra!</strong></p>
-                  <p>• 1 punto por cada $100 gastado</p>
-                  <p>• Bonus por categoría seleccionada</p>
-                  <p>• Canjea puntos por descuentos futuros</p>
-                </div>
-              </div>
+
             </div>
 
             {/* Estado del proceso */}
