@@ -19,6 +19,29 @@
 CREATE DATABASE IF NOT EXISTS `gift-card` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_uca1400_ai_ci */;
 USE `gift-card`;
 
+-- Volcando estructura para tabla gift-card.email_logs
+CREATE TABLE IF NOT EXISTS `email_logs` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `order_id` int(11) DEFAULT NULL,
+  `email_type` enum('order_confirmation','payment_confirmation','gift_card_delivery','reminder') NOT NULL,
+  `recipient_email` varchar(255) NOT NULL,
+  `subject` varchar(255) NOT NULL,
+  `content` text NOT NULL,
+  `status` enum('pending','sent','failed') NOT NULL DEFAULT 'pending',
+  `error_message` text DEFAULT NULL,
+  `sent_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `order_id` (`order_id`),
+  KEY `recipient_email` (`recipient_email`),
+  KEY `idx_order_id` (`order_id`),
+  KEY `idx_status` (`status`),
+  KEY `idx_created_at` (`created_at`),
+  CONSTRAINT `email_logs_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+
+-- Volcando datos para la tabla gift-card.email_logs: ~0 rows (aproximadamente)
+
 -- Volcando estructura para tabla gift-card.gift_cards
 CREATE TABLE IF NOT EXISTS `gift_cards` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -76,13 +99,15 @@ CREATE TABLE IF NOT EXISTS `orders` (
   KEY `gift_card_id` (`gift_card_id`),
   KEY `idx_numero_orden` (`numero_orden`),
   KEY `idx_estado` (`estado`),
+  KEY `idx_orders_estado_fecha` (`estado`,`fecha_orden`),
   KEY `idx_webpay_token` (`webpay_token`),
-  KEY `idx_fecha_orden` (`fecha_orden`),
-  KEY `idx_email_comprador` (`email_comprador`),
-  CONSTRAINT `orders_ibfk_1` FOREIGN KEY (`gift_card_id`) REFERENCES `gift_cards` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+  KEY `idx_orders_webpay_token_status` (`webpay_token`,`estado`),
+  CONSTRAINT `orders_ibfk_1` FOREIGN KEY (`gift_card_id`) REFERENCES `gift_cards` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
--- Volcando datos para la tabla gift-card.orders: ~0 rows (aproximadamente)
+-- Volcando datos para la tabla gift-card.orders: ~1 rows (aproximadamente)
+INSERT IGNORE INTO `orders` (`id`, `numero_orden`, `email_comprador`, `nombre_comprador`, `total`, `estado`, `fecha_orden`, `fecha_pago`, `metodo_pago`, `gift_card_id`, `webpay_token`, `webpay_buy_order`, `webpay_session_id`, `webpay_transaction_date`, `webpay_authorization_code`, `webpay_payment_type_code`, `webpay_response_code`, `webpay_amount`, `webpay_currency`, `webpay_shares_number`, `webpay_commerce_code`, `webpay_installments_amount`, `webpay_installments_type`, `balance_transaction_id`, `created_at`, `updated_at`) VALUES
+	(1, 'ORDER_1755889706466', 'cliente@web.com', 'Cliente Web', 5.95, 'pendiente', '2025-08-22 19:08:27', NULL, NULL, NULL, 'TOKEN_1755889707120', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'CLP', NULL, NULL, NULL, NULL, NULL, '2025-08-22 19:08:27', '2025-08-22 19:08:27');
 
 -- Volcando estructura para tabla gift-card.order_items
 CREATE TABLE IF NOT EXISTS `order_items` (
@@ -102,8 +127,10 @@ CREATE TABLE IF NOT EXISTS `order_items` (
   KEY `gift_card_id` (`gift_card_id`),
   KEY `idx_order_id` (`order_id`),
   CONSTRAINT `order_items_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `order_items_ibfk_2` FOREIGN KEY (`gift_card_id`) REFERENCES `gift_cards` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE
+  CONSTRAINT `order_items_ibfk_2` FOREIGN KEY (`gift_card_id`) REFERENCES `gift_cards` (`id`) ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+
+-- Volcando datos para la tabla gift-card.order_items: ~0 rows (aproximadamente)
 
 -- Volcando estructura para tabla gift-card.payment_transactions
 CREATE TABLE IF NOT EXISTS `payment_transactions` (
@@ -127,31 +154,7 @@ CREATE TABLE IF NOT EXISTS `payment_transactions` (
   CONSTRAINT `payment_transactions_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
--- Volcando estructura para tabla gift-card.email_logs
-CREATE TABLE IF NOT EXISTS `email_logs` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `order_id` int(11) DEFAULT NULL,
-  `email_type` enum('order_confirmation','payment_confirmation','gift_card_delivery','reminder') NOT NULL,
-  `recipient_email` varchar(255) NOT NULL,
-  `subject` varchar(255) NOT NULL,
-  `content` text NOT NULL,
-  `status` enum('pending','sent','failed') NOT NULL DEFAULT 'pending',
-  `error_message` text DEFAULT NULL,
-  `sent_at` timestamp NULL DEFAULT NULL,
-  `created_at` timestamp NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`id`),
-  KEY `order_id` (`order_id`),
-  KEY `recipient_email` (`recipient_email`),
-  KEY `idx_order_id` (`order_id`),
-  KEY `idx_status` (`status`),
-  KEY `idx_created_at` (`created_at`),
-  CONSTRAINT `email_logs_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
-
--- Crear índices adicionales para mejor rendimiento (solo si no existen)
-CREATE INDEX IF NOT EXISTS `idx_orders_estado_fecha` ON `orders` (`estado`, `fecha_orden`);
-CREATE INDEX IF NOT EXISTS `idx_orders_webpay_token_status` ON `orders` (`webpay_token`, `estado`);
-CREATE INDEX IF NOT EXISTS `idx_gift_cards_activa_expiracion` ON `gift_cards` (`activa`, `fecha_expiracion`);
+-- Volcando datos para la tabla gift-card.payment_transactions: ~0 rows (aproximadamente)
 
 /*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
