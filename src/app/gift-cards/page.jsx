@@ -32,14 +32,14 @@ export default function GiftCardsPage() {
 
   const handleCreateGiftCard = async (formData) => {
     try {
-      // Mapear campos del formulario (en algunos componentes se usan nombres en inglés)
+      // Los campos ya están en el formato correcto
       const payload = {
-        codigo: formData.codigo ?? formData.code,
-        valor_inicial: formData.valor_inicial ?? formData.amount ?? Number(formData.amount) ?? 0,
-        fecha_expiracion: formData.fecha_expiracion ?? formData.expiration_date,
-        email_destinatario: formData.email_destinatario ?? formData.email,
-        mensaje: formData.mensaje ?? formData.message,
-        empresa: formData.empresa ?? formData.company
+        codigo: formData.codigo,
+        valor_inicial: formData.valor_inicial,
+        fecha_expiracion: formData.fecha_expiracion,
+        email_destinatario: formData.email_destinatario,
+        mensaje: formData.mensaje,
+        empresa: formData.empresa
       };
 
       // Validar si el código ya existe antes de enviar

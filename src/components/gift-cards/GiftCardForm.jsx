@@ -4,12 +4,12 @@ import { useState } from 'react';
 
 export const GiftCardForm = ({ onSubmit }) => {
   const [formData, setFormData] = useState({
-    code: '',
-    amount: 0,
-    expiration_date: '',
+    codigo: '',
+    valor_inicial: 0,
+    fecha_expiracion: '',
     empresa: '',
-    email: '',
-    message: ''
+    email_destinatario: '',
+    mensaje: ''
   });
 
   const handleSubmit = (e) => {
@@ -20,14 +20,14 @@ export const GiftCardForm = ({ onSubmit }) => {
   return (
   <form onSubmit={handleSubmit} className="space-y-4 p-4 bg-white rounded-lg shadow">
       <div>
-        <label htmlFor="code" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="codigo" className="block text-sm font-medium text-gray-700">
           Código
         </label>
         <input
           type="text"
-          id="code"
-          value={formData.code}
-          onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+          id="codigo"
+          value={formData.codigo}
+          onChange={(e) => setFormData({ ...formData, codigo: e.target.value })}
       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
           required
       placeholder="Ej: PROMO-2025"
@@ -35,14 +35,14 @@ export const GiftCardForm = ({ onSubmit }) => {
       </div>
 
       <div>
-        <label htmlFor="amount" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="valor_inicial" className="block text-sm font-medium text-gray-700">
           Monto
         </label>
         <input
           type="number"
-          id="amount"
-          value={formData.amount}
-          onChange={(e) => setFormData({ ...formData, amount: Number(e.target.value) })}
+          id="valor_inicial"
+          value={formData.valor_inicial}
+          onChange={(e) => setFormData({ ...formData, valor_inicial: Number(e.target.value) })}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
           required
           placeholder="Monto en pesos"
@@ -50,15 +50,15 @@ export const GiftCardForm = ({ onSubmit }) => {
       </div>
 
       <div>
-        <label htmlFor="expiration_date" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="fecha_expiracion" className="block text-sm font-medium text-gray-700">
           Fecha de Expiración
         </label>
         <input
           type="date"
-          id="expiration_date"
-          value={formData.expiration_date}
-          onChange={(e) => setFormData({ ...formData, expiration_date: e.target.value })}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          id="fecha_expiracion"
+          value={formData.fecha_expiracion}
+          onChange={(e) => setFormData({ ...formData, fecha_expiracion: e.target.value })}
+          className="mt-1 block w-full rounded-sm focus:border-blue-500 focus:ring-blue-500"
           required
           placeholder="Fecha de expiración"
         />
@@ -79,27 +79,27 @@ export const GiftCardForm = ({ onSubmit }) => {
       </div>
 
       <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="email_destinatario" className="block text-sm font-medium text-gray-700">
           Email destinatario
         </label>
         <input
           type="email"
-          id="email"
-          value={formData.email}
-          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+          id="email_destinatario"
+          value={formData.email_destinatario}
+          onChange={(e) => setFormData({ ...formData, email_destinatario: e.target.value })}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
           placeholder="email@dominio.com"
         />
       </div>
 
       <div>
-        <label htmlFor="message" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="mensaje" className="block text-sm font-medium text-gray-700">
           Mensaje
         </label>
         <textarea
-          id="message"
-          value={formData.message}
-          onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+          id="mensaje"
+          value={formData.mensaje}
+          onChange={(e) => setFormData({ ...formData, mensaje: e.target.value })}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
           rows={3}
           placeholder="Mensaje que verá el destinatario"

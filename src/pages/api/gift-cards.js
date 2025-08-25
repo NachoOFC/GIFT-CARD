@@ -3,6 +3,31 @@ import pool from '@/utils/db';
 export default async function handler(req, res) {
   const { method } = req;
 
+  // Manejar verificación de código existente
+  if (method === 'GET' && req.query.codigo) {
+    try {
+      const connection = await pool.getConnection();
+      try {
+        const [rows] = await connection.query(
+          'SELECT COUNT(*) as count FROM gift_cards WHERE codigo = ?',
+          [req.query.codigo]
+        );
+        return res.status(200).json({ 
+          success: true, 
+          exists: rows[0].count > 0
+        });
+      } finally {
+        connection.release();
+      }
+    } catch (error) {
+      console.error('Error al verificar código:', error);
+      return res.status(500).json({ 
+        success: false, 
+        message: 'Error al verificar código' 
+      });
+    }
+  }
+
   switch (method) {
     case 'GET':
       try {
@@ -27,9 +52,9 @@ export default async function handler(req, res) {
 
     case 'POST':
       try {
-        const { code, amount, expiration_date } = req.body;
+        const { codigo, valor_inicial, fecha_expiracion, email_destinatario, mensaje, empresa } = req.body;
         
-        if (!code || !amount) {
+        if (!codigo || !valor_inicial) {
           return res.status(400).json({ 
             success: false, 
             message: 'Se requieren código y monto' 
@@ -41,8 +66,8 @@ export default async function handler(req, res) {
           await connection.beginTransaction();
           
           const [result] = await connection.execute(
-            'INSERT INTO gift_cards (code, amount, expiration_date) VALUES (?, ?, ?)',
-            [code, amount, expiration_date]
+            'INSERT INTO gift_cards (codigo, valor_inicial, saldo_actual, fecha_expiracion, email_destinatario, mensaje) VALUES (?, ?, ?, ?, ?, ?)',
+            [codigo, valor_inicial, valor_inicial, fecha_expiracion, email_destinatario, mensaje]
           );
 
           await connection.commit();
