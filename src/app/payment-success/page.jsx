@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useCart } from "@/contexts/CartContext";
 import { formatCLP } from "@/types/type";
+import CreateQr from "@/components/Emision-Qr/CreateQr";
 
 export default function PaymentSuccessPage() {
   const { cart, clearCart } = useCart();
@@ -126,6 +127,17 @@ export default function PaymentSuccessPage() {
             </div>
           </div>
         </div>
+
+        {/* Código QR de la Gift Card */}
+        <CreateQr 
+          giftCardData={{
+            type: 'gift_card',
+            status: 'active',
+            company: 'MLine'
+          }}
+          transactionId={paymentDetails.transactionId}
+          amount={paymentDetails.amount}
+        />
 
         {/* Resumen de items comprados */}
         <div className="bg-white shadow-lg rounded-lg overflow-hidden mb-8">
