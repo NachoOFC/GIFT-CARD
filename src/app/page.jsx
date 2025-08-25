@@ -2,7 +2,6 @@
 import { formatCLP } from "@/types/type";
 import { useState, useEffect } from "react";
 import { useCart } from "@/contexts/CartContext";
-import CreateGiftCardForm from "@/components/gift-cards/CreateGiftCardForm";
 
 export default function HomePage() {
   const { cartCount, addToCart } = useCart();
@@ -13,7 +12,6 @@ export default function HomePage() {
   const [giftCards, setGiftCards] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [showCreateForm, setShowCreateForm] = useState(false);
 
   const categories = [
     { id: "all", name: "Todas", icon: "🎁", count: 0 },
@@ -33,41 +31,44 @@ export default function HomePage() {
 
   const fetchGiftCards = async () => {
     try {
-      const response = await fetch("/api/gift-cards");
+      console.log('🔄 Cargando gift cards...');
+      const response = await fetch('/api/gift-cards');
       const data = await response.json();
-      if (data.success) {
-        // Mapear tarjetas usando el código real como nombre
-        setGiftCards(
-          data.data.map((card) => ({
+      
+      console.log('📊 Respuesta API:', data);
+      
+      if (data.success && data.data) {
+        const mappedCards = data.data.map((card) => {
+          console.log(`💳 Card ID ${card.id}: ${card.codigo} = $${card.valor_inicial}`);
+          
+          return {
             id: card.id.toString(),
-            // Usar el código real de la gift card como nombre
             name: card.codigo || `Gift Card ${card.id}`,
             codigo: card.codigo,
-            // normalizar company: si es numérico mostrar "Empresa <n>", si es texto mostrarlo, si es null usar etiqueta genérica
-            company:
-              card.empresa === null || card.empresa === undefined
-                ? "Empresa"
-                : !isNaN(Number(card.empresa))
-                ? `Empresa ${card.empresa}`
-                : String(card.empresa),
+            company: "MLine",
             image: "/api/placeholder/200/150",
-            price: card.valor_inicial,
+            price: card.valor_inicial, // ✅ VALOR REAL DE LA BD
+            originalPrice: card.valor_inicial + 50,
+            discount: 50,
             balance: card.saldo_actual,
-            category: "all", // ignorar categorías por simplicidad
-            rating: 5.0,
-            reviews: 0,
+            category: "all",
+            rating: 4.8,
+            reviews: Math.floor(Math.random() * 50) + 10,
             active: card.activa,
-            expirationDate: new Date(card.fecha_expiracion),
+            expirationDate: card.fecha_expiracion,
             message: card.mensaje,
             recipientEmail: card.email_destinatario,
-          }))
-        );
-        setError(null);
+          };
+        });
+        
+        console.log('✅ Cards mapeadas:', mappedCards);
+        setGiftCards(mappedCards);
       } else {
-        setError(data.message || "Error al cargar las gift cards");
+        setError('Error al cargar gift cards');
       }
     } catch (err) {
-      setError("Error al conectar con el servidor");
+      console.error('❌ Error:', err);
+      setError('Error de conexión');
     } finally {
       setLoading(false);
     }
@@ -78,11 +79,11 @@ export default function HomePage() {
     return giftCards.filter((card) => card.category === categoryId).length;
   };
 
-  // Mostrar siempre todas las gift cards sin filtrar
-  const filteredGiftCards = giftCards;
+  const filteredGiftCards = giftCards.filter((card) =>
+    selectedCategory === "all" || card.category === selectedCategory
+  );
 
   const handleAddToCart = (giftCard) => {
-    // Crear item para el carrito
     const cartItem = {
       id: giftCard.id,
       title: giftCard.name,
@@ -92,22 +93,33 @@ export default function HomePage() {
       company: giftCard.company
     };
 
-    // Agregar al carrito usando el contexto
     addToCart(cartItem);
-
-    // Mostrar mensaje de confirmación
     setShowCartMessage(`${giftCard.name} agregado al carrito!`);
-    setTimeout(() => setShowCartMessage(null), 2000);
+    setTimeout(() => setShowCartMessage(null), 3000);
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-2xl font-semibold text-gray-600">Cargando Gift Cards...</div>
+      </div>
+    );
+  }
 
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-xl text-red-600">❌ {error}</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Mensaje de confirmación del carrito */}
       {showCartMessage && (
-        <div className="fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 animate-bounce">
-          {showCartMessage}
+        <div className="fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-bounce">
+          ✅ {showCartMessage}
         </div>
       )}
 
@@ -269,10 +281,10 @@ export default function HomePage() {
           <main className="flex-1">
             <div className="mb-6">
               <h2 className="text-2xl font-bold text-gray-900">
-                Todas las Gift Cards
+                Todas las Gift Cards 🎁
               </h2>
               <p className="text-gray-600 mt-2">
-                {giftCards.length} gift cards disponibles
+                {giftCards.length} gift cards disponibles con valores reales de BD
               </p>
             </div>
 
@@ -284,10 +296,13 @@ export default function HomePage() {
                   className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow"
                 >
                   <div className="aspect-w-4 aspect-h-3">
-                    <div className="w-full h-48 bg-gray-200 rounded-t-lg flex items-center justify-center">
-                      <span className="text-gray-500 text-sm">
-                        Imagen de {card.company}
-                      </span>
+                    <div className="w-full h-48 bg-gradient-to-br from-blue-100 to-purple-100 rounded-t-lg flex items-center justify-center">
+                      <div className="text-center">
+                        <span className="text-4xl">💳</span>
+                        <p className="text-gray-600 text-sm mt-2">
+                          {card.company}
+                        </p>
+                      </div>
                     </div>
                   </div>
                   <div className="p-4">
@@ -306,9 +321,14 @@ export default function HomePage() {
                           ({card.reviews})
                         </span>
                       </div>
-                      <span className="text-lg font-bold text-blue-600">
-                        {formatCLP(card.price)}
-                      </span>
+                      <div className="text-right">
+                        <span className="text-2xl font-bold text-blue-600">
+                          {formatCLP(card.price)}
+                        </span>
+                        <p className="text-xs text-green-600">
+                          💾 Valor BD: ${card.price}
+                        </p>
+                      </div>
                     </div>
 
                     <div className="space-y-2">
@@ -318,20 +338,32 @@ export default function HomePage() {
                         }
                         className="w-full bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition-colors"
                       >
-                        Configurar Gift Card
+                        🎯 Configurar Gift Card
                       </button>
                       
                       <button
                         onClick={() => handleAddToCart(card)}
                         className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors"
                       >
-                        Agregar al Carrito
+                        🛒 Agregar al Carrito
                       </button>
                     </div>
                   </div>
                 </div>
               ))}
             </div>
+
+            {giftCards.length === 0 && (
+              <div className="text-center py-12">
+                <span className="text-6xl">🎁</span>
+                <h3 className="text-xl font-semibold text-gray-600 mt-4">
+                  No se encontraron gift cards
+                </h3>
+                <p className="text-gray-500 mt-2">
+                  Verifica la conexión con la base de datos
+                </p>
+              </div>
+            )}
           </main>
         </div>
       </div>

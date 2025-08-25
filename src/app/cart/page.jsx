@@ -57,17 +57,21 @@ export default function CartPage() {
         // Simular proceso de pago para otros métodos
         await new Promise(resolve => setTimeout(resolve, 2000))
         
-        console.log('Procesando pago:', {
+        const totalAmount = getCartGrandTotal();
+        
+        console.log('✅ Procesando pago:', {
           items: cartItems,
-          total: getCartGrandTotal(),
+          total: totalAmount,
           paymentMethod
         })
         
-        // Limpiar carrito después del pago exitoso
-        clearCart()
+        // Redirigir a página de éxito con el monto real
+        const successUrl = `/payment-success?amount=${totalAmount}&items=${cartItems.length}&method=${paymentMethod}`;
         
-        // Redirigir a página de éxito
-        window.location.href = '/payment-success'
+        console.log('🔄 Redirigiendo a:', successUrl);
+        
+        // Redirigir ANTES de limpiar el carrito para que payment-success pueda acceder a los items
+        window.location.href = successUrl;
       }
       
     } catch (error) {
