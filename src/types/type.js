@@ -13,6 +13,11 @@ export const MONTOS_SUGERIDOS = [
 	// Puedes agregar más sugeridos aquí
 ];
 
+// Límites y step para montos de gift card
+export const MONTO_MIN = 3000;
+export const MONTO_MAX = 50000;
+export const MONTO_STEP = 500;
+
 /**
  * Formatea un número como moneda CLP usando localización es-CL
  * @param {number} amount
