@@ -36,12 +36,13 @@ export default function HomePage() {
       const response = await fetch("/api/gift-cards");
       const data = await response.json();
       if (data.success) {
-        // Mapear tarjetas directamente y asignar categoría 'all' para ignorar la lógica de categorías
+        // Mapear tarjetas usando el código real como nombre
         setGiftCards(
           data.data.map((card) => ({
             id: card.id.toString(),
-            // usar id en el título para consistencia y evitar mostrar números crudos de empresa
-            name: `Gift Card ${card.id}`,
+            // Usar el código real de la gift card como nombre
+            name: card.codigo || `Gift Card ${card.id}`,
+            codigo: card.codigo,
             // normalizar company: si es numérico mostrar "Empresa <n>", si es texto mostrarlo, si es null usar etiqueta genérica
             company:
               card.empresa === null || card.empresa === undefined

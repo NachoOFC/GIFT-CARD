@@ -5,7 +5,7 @@ import { useState } from 'react';
 export const GiftCardForm = ({ onSubmit }) => {
   const [formData, setFormData] = useState({
     codigo: '',
-    valor_inicial: 0,
+    valor_inicial: '',
     fecha_expiracion: '',
     empresa: '',
     email_destinatario: '',
@@ -14,7 +14,27 @@ export const GiftCardForm = ({ onSubmit }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit(formData);
+    
+    // Validar que el monto sea un número válido
+    const monto = parseFloat(formData.valor_inicial);
+    if (isNaN(monto) || monto <= 0) {
+      alert('Por favor ingresa un monto válido mayor a 0');
+      return;
+    }
+    
+    // Enviar los datos con el monto convertido a número
+    onSubmit({
+      ...formData,
+      valor_inicial: monto
+    });
+  };
+
+  const handleMontoChange = (e) => {
+    const value = e.target.value;
+    // Permitir solo números y punto decimal
+    if (value === '' || /^\d*\.?\d*$/.test(value)) {
+      setFormData({ ...formData, valor_inicial: value });
+    }
   };
 
   return (
@@ -39,13 +59,15 @@ export const GiftCardForm = ({ onSubmit }) => {
           Monto
         </label>
         <input
-          type="number"
+          type="text"
           id="valor_inicial"
           value={formData.valor_inicial}
-          onChange={(e) => setFormData({ ...formData, valor_inicial: Number(e.target.value) })}
+          onChange={handleMontoChange}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
           required
           placeholder="Monto en pesos"
+          min="0"
+          step="0.01"
         />
       </div>
 

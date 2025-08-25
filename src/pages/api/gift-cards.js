@@ -33,7 +33,7 @@ export default async function handler(req, res) {
       try {
         const connection = await pool.getConnection();
         try {
-          const [giftCards] = await connection.query('SELECT * FROM gift_cards');
+          const [giftCards] = await connection.query('SELECT * FROM gift_cards ORDER BY fecha_creacion DESC');
           return res.status(200).json({ 
             success: true, 
             data: giftCards
@@ -65,9 +65,23 @@ export default async function handler(req, res) {
         try {
           await connection.beginTransaction();
           
+          // Verificar si el código ya existe
+          const [existing] = await connection.query(
+            'SELECT COUNT(*) as count FROM gift_cards WHERE codigo = ?',
+            [codigo]
+          );
+          
+          if (existing[0].count > 0) {
+            await connection.rollback();
+            return res.status(400).json({ 
+              success: false, 
+              message: 'El código ya existe' 
+            });
+          }
+          
           const [result] = await connection.execute(
-            'INSERT INTO gift_cards (codigo, valor_inicial, saldo_actual, fecha_expiracion, email_destinatario, mensaje) VALUES (?, ?, ?, ?, ?, ?)',
-            [codigo, valor_inicial, valor_inicial, fecha_expiracion, email_destinatario, mensaje]
+            'INSERT INTO gift_cards (codigo, valor_inicial, saldo_actual, fecha_expiracion, email_destinatario, empresa, mensaje) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [codigo, valor_inicial, valor_inicial, fecha_expiracion, email_destinatario, empresa, mensaje]
           );
 
           await connection.commit();

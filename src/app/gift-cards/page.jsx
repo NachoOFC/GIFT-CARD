@@ -44,7 +44,7 @@ export default function GiftCardsPage() {
 
       // Validar si el código ya existe antes de enviar
       if (payload.codigo) {
-        const checkRes = await fetch(`/api/gift-cards/check?codigo=${encodeURIComponent(payload.codigo)}`);
+        const checkRes = await fetch(`/api/gift-cards?codigo=${encodeURIComponent(payload.codigo)}`);
         const checkData = await checkRes.json();
         if (checkData.success && checkData.exists) {
           setError('El código ya existe. Elige otro.');
