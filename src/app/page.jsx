@@ -1,5 +1,5 @@
 "use client";
-
+import { formatCLP } from "@/types/type";
 import { useState, useEffect } from "react";
 import { useCart } from "@/contexts/CartContext";
 import CreateGiftCardForm from "@/components/gift-cards/CreateGiftCardForm";
@@ -306,7 +306,7 @@ export default function HomePage() {
                         </span>
                       </div>
                       <span className="text-lg font-bold text-blue-600">
-                        ${Math.round(card.price).toLocaleString()}
+                        {formatCLP(card.price)}
                       </span>
                     </div>
 
