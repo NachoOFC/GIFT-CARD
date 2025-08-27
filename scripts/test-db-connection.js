@@ -1,3 +1,4 @@
+require('dotenv').config({ path: './.env.local' });
 const mysql = require('mysql2/promise');
 
 async function testDatabaseConnection() {
