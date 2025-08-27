@@ -1,4 +1,4 @@
-import pool from '../../../../utils/db';
+import pool from '../../../../utils/db.ts';
 import QRCode from 'qrcode';
 import nodemailer from 'nodemailer';
 
@@ -155,22 +155,24 @@ export async function POST(request) {
       }, { status: 400 });
     }
     
-    // SOLO crear la orden en la tabla orders (NO crear gift card)
+    // Crear la orden en la tabla orders con la estructura actual
     const [orderResult] = await pool.execute(`
       INSERT INTO orders (
         numero_orden,
         email_comprador,
+        nombre_comprador,
         total,
         estado,
-        fecha_orden,
-        gift_card_id
-      ) VALUES (?, ?, ?, ?, NOW(), ?)
+        metodo_pago,
+        fecha_orden
+      ) VALUES (?, ?, ?, ?, ?, ?, NOW())
     `, [
       order_id,
       email_destinatario,
+      customer_name || 'Cliente',
       monto,
       'pagado', // marcamos como pagado inmediatamente
-      null // No hay gift_card_id porque no creamos gift card
+      'webpay' // método de pago por defecto
     ]);
 
     const orderId = orderResult.insertId;
