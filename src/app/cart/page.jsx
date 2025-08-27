@@ -16,6 +16,9 @@ export default function CartPage() {
   
   const [isProcessing, setIsProcessing] = useState(false)
   const [paymentMethod, setPaymentMethod] = useState('credit_card')
+  const [customerEmail, setCustomerEmail] = useState('')
+  const [customerName, setCustomerName] = useState('')
+  const [emailError, setEmailError] = useState('')
 
   const formatCurrency = (value) => {
     return '$' + parseInt(value.toString()).toLocaleString('es-CL')
@@ -24,6 +27,23 @@ export default function CartPage() {
   const handleCheckout = async () => {
     if (cartItems.length === 0) return
     
+    // Validar email
+    if (!customerEmail) {
+      setEmailError('Por favor ingresa tu email')
+      return
+    }
+    
+    if (!customerEmail.includes('@')) {
+      setEmailError('Por favor ingresa un email válido')
+      return
+    }
+    
+    if (!customerName) {
+      setEmailError('Por favor ingresa tu nombre')
+      return
+    }
+    
+    setEmailError('')
     setIsProcessing(true)
     
     try {
@@ -40,8 +60,8 @@ export default function CartPage() {
             orderId,
             amount: getCartGrandTotal(),
             items: cartItems,
-            customerName: 'Cliente Web', // Aquí podrías obtener del formulario
-            customerEmail: 'cliente@web.com' // Aquí podrías obtener del formulario
+            customerName: customerName,
+            customerEmail: customerEmail
           })
         })
 
@@ -66,7 +86,7 @@ export default function CartPage() {
         })
         
         // Redirigir a página de éxito con el monto real
-        const successUrl = `/payment-success?amount=${totalAmount}&items=${cartItems.length}&method=${paymentMethod}`;
+        const successUrl = `/payment-success?amount=${totalAmount}&items=${cartItems.length}&method=${paymentMethod}&email=${encodeURIComponent(customerEmail)}&name=${encodeURIComponent(customerName)}`;
         
         console.log('🔄 Redirigiendo a:', successUrl);
         
@@ -218,6 +238,38 @@ export default function CartPage() {
                 </div>
               </div>
 
+              {/* Información del Cliente */}
+              <div className="mb-6">
+                <h4 className="text-sm font-medium text-gray-700 mb-3">Información del Cliente</h4>
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm text-gray-600 mb-1">Nombre completo</label>
+                    <input
+                      type="text"
+                      value={customerName}
+                      onChange={(e) => setCustomerName(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Tu nombre completo"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-600 mb-1">Email para comprobante</label>
+                    <input
+                      type="email"
+                      value={customerEmail}
+                      onChange={(e) => setCustomerEmail(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="tu@email.com"
+                      required
+                    />
+                    {emailError && (
+                      <p className="text-red-600 text-sm mt-1">{emailError}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
               {/* Método de Pago */}
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-3">
@@ -260,7 +312,7 @@ export default function CartPage() {
               {/* Botón de Pago */}
               <button
                 onClick={handleCheckout}
-                disabled={isProcessing || cartItems.length === 0}
+                disabled={isProcessing || cartItems.length === 0 || !customerEmail || !customerName}
                 className="w-full bg-green-600 text-white py-3 px-6 rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-semibold flex items-center justify-center space-x-2"
               >
                 {isProcessing ? (

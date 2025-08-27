@@ -32,6 +32,8 @@ function PaymentSuccessContent() {
   const token = searchParams.get('token');
   const buyOrder = searchParams.get('buy_order');
   const amount = searchParams.get('amount');
+  const email = searchParams.get('email');
+  const name = searchParams.get('name');
 
   useEffect(() => {
     // Simular proceso de generación de gift card
@@ -43,15 +45,17 @@ function PaymentSuccessContent() {
         await new Promise(resolve => setTimeout(resolve, 2000));
         
         // Si tenemos parámetros reales, generar gift card
-        if (orderId && amount) {
+        if (amount && email) {
           const response = await fetch('/api/giftcard/generate', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              order_id: orderId,
+              order_id: orderId || `ORDER-${Date.now()}`,
               monto: parseFloat(amount) || 25000,
-              email_destinatario: 'moonsystemspv@gmail.com',
-              mensaje: '¡Gracias por tu compra! Tu Gift Card está lista.'
+              email_destinatario: email,
+              mensaje: '¡Gracias por tu compra! Tu Gift Card está lista.',
+              customer_name: name || 'Cliente',
+              tipo_gift_card: 'FISICA' // Por defecto, puede venir del carrito después
             })
           });
 
@@ -67,10 +71,10 @@ function PaymentSuccessContent() {
           // Datos de demostración
           setGiftCard({
             codigo: 'GC-2025-DEMO123',
-            valor_inicial: 25000,
+            valor_inicial: parseFloat(amount) || 25000,
             fecha_expiracion: '2026-08-22',
             estado: 'EMITIDA',
-            email_destinatario: 'moonsystemspv@gmail.com',
+            email_destinatario: email || 'moonsystemspv@gmail.com',
             qr_code: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgZmlsbD0iIzAwMCIvPjxyZWN0IHg9IjEwIiB5PSIxMCIgd2lkdGg9IjI4MCIgaGVpZ2h0PSIyODAiIGZpbGw9IiNmZmYiLz48cmVjdCB4PSIyMCIgeT0iMjAiIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgZmlsbD0iIzAwMCIvPjxyZWN0IHg9IjYwIiB5PSIyMCIgd2lkdGg9IjIwIiBoZWlnaHQ9IjIwIiBmaWxsPSIjMDAwIi8+PHJlY3QgeD0iMjYwIiB5PSIyMCIgd2lkdGg9IjIwIiBoZWlnaHQ9IjIwIiBmaWxsPSIjMDAwIi8+PHJlY3QgeD0iMjAiIHk9IjI2MCIgd2lkdGg9IjIwIiBoZWlnaHQ9IjIwIiBmaWxsPSIjMDAwIi8+PHJlY3QgeD0iMjYwIiB5PSIyNjAiIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgZmlsbD0iIzAwMCIvPjwvc3ZnPg==',
             token: 'demo-token-12345',
             url_activacion: '/activate/demo-token-12345'
