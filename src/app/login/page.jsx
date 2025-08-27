@@ -9,6 +9,7 @@ const Login = () => {
     email: '',
     password: ''
   });
+  const router = useRouter();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -24,12 +25,20 @@ const Login = () => {
     const users = JSON.parse(localStorage.getItem('users') || '[]');
     const found = users.find(u => u.email === formData.email && u.password === formData.password);
     if (found) {
+      // si autenticación exitosa, eliminar flag de invitado si existía
+      localStorage.removeItem('guest');
       localStorage.setItem('currentUser', JSON.stringify({ email: found.email }));
-      // redirigir a home original
-      router.push('/');
+  // redirigir a la sección antigua donde se mostraban todas las gift cards
+  router.push('/home#list');
     } else {
       alert('Usuario o contraseña incorrectos. Puedes registrarte primero.');
     }
+  };
+
+  const continueAsGuest = () => {
+    localStorage.setItem('guest', 'true');
+  // navegar a la sección inicial de gift cards en la vista original
+  router.push('/home#list');
   };
 
   return (
@@ -95,6 +104,11 @@ const Login = () => {
               Regístrate aquí
             </Link>
           </span>
+        </div>
+        <div style={{ marginTop: 12, textAlign: 'center' }}>
+          <button type="button" onClick={continueAsGuest} className={styles.button} style={{ background: '#6b7280' }}>
+            Continuar sin iniciar sesión
+          </button>
         </div>
       </div>
     </div>

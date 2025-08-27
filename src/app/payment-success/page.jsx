@@ -19,6 +19,15 @@ import {
 
 function PaymentSuccessContent() {
   const searchParams = useSearchParams();
+  // Forzar login/guest antes de mostrar la página de éxito
+  if (typeof window !== 'undefined') {
+    const currentUser = localStorage.getItem('currentUser');
+    const guest = localStorage.getItem('guest');
+    if (!currentUser && !guest) {
+      window.location.href = '/login';
+      return null;
+    }
+  }
   const [showConfetti, setShowConfetti] = useState(false);
   const [progressComplete, setProgressComplete] = useState(false);
   const [copied, setCopied] = useState(false);
