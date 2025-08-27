@@ -308,6 +308,14 @@ export default function HomePage() {
 
           {/* Contenido Principal */}
           <main className="flex-1">
+            {activeTab === 'empresas' ? (
+              <div className="bg-white rounded-lg shadow-sm border p-6">
+                <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-2">Empresas</h2>
+                <p className="text-gray-600 mb-4">Compra masiva y asignación de Gift Cards para tus colaboradores.</p>
+                <a href="/empresas" className="inline-block bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Ir al portal de empresas</a>
+              </div>
+            ) : (
+            <>
             <div className="mb-4 md:mb-6">
               <h2 className="text-xl md:text-2xl font-bold text-gray-900">
                 Todas las Gift Cards 🎁
@@ -392,6 +400,8 @@ export default function HomePage() {
                   Verifica la conexión con la base de datos
                 </p>
               </div>
+            )}
+            </>
             )}
           </main>
         </div>
