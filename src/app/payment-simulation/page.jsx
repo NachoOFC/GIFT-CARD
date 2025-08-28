@@ -5,6 +5,16 @@ import { useSearchParams } from 'next/navigation'
 
 function PaymentSimulationContent() {
   const searchParams = useSearchParams()
+  // Requerir usuario o flag 'guest' antes de permitir el uso de la simulación de pago
+  // Si no existe ninguno, redirigir a /login para autenticar o permitir continuar como invitado
+  if (typeof window !== 'undefined') {
+    const currentUser = localStorage.getItem('currentUser')
+    const guest = localStorage.getItem('guest')
+    if (!currentUser && !guest) {
+      window.location.href = '/login'
+      return null
+    }
+  }
   const [isProcessing, setIsProcessing] = useState(false)
   const [paymentStatus, setPaymentStatus] = useState('pending')
   

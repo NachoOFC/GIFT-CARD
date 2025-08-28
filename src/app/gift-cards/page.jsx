@@ -14,6 +14,25 @@ export default function GiftCardsPage() {
     fetchGiftCards();
   }, []);
 
+  // Si la URL tiene #list o ?scrollTo=list, hacer scroll al contenedor de lista
+  useEffect(() => {
+    const doScroll = () => {
+      try {
+        const url = window.location.href;
+        if (url.includes('#list') || url.includes('scrollTo=list')) {
+          const el = document.getElementById('giftcard-list');
+          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      } catch (e) {
+        // noop
+      }
+    };
+
+    // Esperar a que el fetch y el render terminen
+    const t = setTimeout(doScroll, 300);
+    return () => clearTimeout(t);
+  }, [loading]);
+
   const fetchGiftCards = async () => {
     try {
       const response = await fetch('/api/gift-cards');
@@ -125,7 +144,7 @@ export default function GiftCardsPage() {
           </div>
 
           <div className="lg:col-span-2">
-            <div className="bg-white/95 rounded-xl shadow-lg p-6 ring-1 ring-indigo-50">
+              <div id="giftcard-list" className="bg-white/95 rounded-xl shadow-lg p-6 ring-1 ring-indigo-50">
               <h2 className="text-xl font-semibold mb-4 text-indigo-700">Gift Cards existentes</h2>
               <GiftCardList giftCards={giftCards} onDelete={handleDeleteLocal} onEdit={handleEditLocal} />
             </div>
