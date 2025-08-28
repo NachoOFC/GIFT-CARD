@@ -32,16 +32,18 @@ export default function HomePage() {
 
   const fetchGiftCards = async () => {
     try {
-      console.log('🔄 Cargando gift cards...');
-      const response = await fetch('/api/gift-cards');
+      console.log("🔄 Cargando gift cards...");
+      const response = await fetch("/api/gift-cards");
       const data = await response.json();
-      
-      console.log('📊 Respuesta API:', data);
-      
+
+      console.log("📊 Respuesta API:", data);
+
       if (data.success && data.data) {
         const mappedCards = data.data.map((card) => {
-          console.log(`💳 Card ID ${card.id}: ${card.codigo} = $${card.valor_inicial}`);
-          
+          console.log(
+            `💳 Card ID ${card.id}: ${card.codigo} = $${card.valor_inicial}`
+          );
+
           return {
             id: card.id.toString(),
             name: card.codigo || `Gift Card ${card.id}`,
@@ -61,15 +63,15 @@ export default function HomePage() {
             recipientEmail: card.email_destinatario,
           };
         });
-        
-        console.log('✅ Cards mapeadas:', mappedCards);
+
+        console.log("✅ Cards mapeadas:", mappedCards);
         setGiftCards(mappedCards);
       } else {
-        setError('Error al cargar gift cards');
+        setError("Error al cargar gift cards");
       }
     } catch (err) {
-      console.error('❌ Error:', err);
-      setError('Error de conexión');
+      console.error("❌ Error:", err);
+      setError("Error de conexión");
     } finally {
       setLoading(false);
     }
@@ -80,8 +82,8 @@ export default function HomePage() {
     return giftCards.filter((card) => card.category === categoryId).length;
   };
 
-  const filteredGiftCards = giftCards.filter((card) =>
-    selectedCategory === "all" || card.category === selectedCategory
+  const filteredGiftCards = giftCards.filter(
+    (card) => selectedCategory === "all" || card.category === selectedCategory
   );
 
   const handleAddToCart = (giftCard) => {
@@ -91,7 +93,7 @@ export default function HomePage() {
       sku: `GC-${giftCard.id}`,
       price: giftCard.price,
       quantity: 1,
-      company: giftCard.company
+      company: giftCard.company,
     };
 
     addToCart(cartItem);
@@ -102,7 +104,9 @@ export default function HomePage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-xl md:text-2xl font-semibold text-gray-600 px-4 text-center">Cargando Gift Cards...</div>
+        <div className="text-xl md:text-2xl font-semibold text-gray-600 px-4 text-center">
+          Cargando Gift Cards...
+        </div>
       </div>
     );
   }
@@ -110,7 +114,9 @@ export default function HomePage() {
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-lg md:text-xl text-red-600 px-4 text-center">❌ {error}</div>
+        <div className="text-lg md:text-xl text-red-600 px-4 text-center">
+          ❌ {error}
+        </div>
       </div>
     );
   }
@@ -195,19 +201,19 @@ export default function HomePage() {
                 <span className="text-lg">💰</span>
                 <span className="hidden md:inline">Consulta tu saldo</span>
               </a>
-              
+
               <div className="flex items-center space-x-2 bg-yellow-100 px-2 md:px-3 py-2 rounded-lg">
                 <span className="text-lg">⭐</span>
                 <span className="text-yellow-800 font-medium text-sm">
                   {userPoints} pts
                 </span>
               </div>
-              
+
               <button className="p-2 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100">
                 <span className="text-lg">👤</span>
               </button>
-              
-              <a 
+
+              <a
                 href="/cart"
                 className="p-2 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100 relative"
               >
@@ -227,13 +233,9 @@ export default function HomePage() {
       <nav className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0">
-            <div className="flex items-center space-x-4">
-              <img 
-                src="/logo/mline.jpg" 
-                alt="MLine Logo" 
-                className="h-16 md:h-24 w-auto object-contain"
-              />
-            </div>
+            <h1 class="text-4xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 drop-shadow-lg">
+              Ryf-Card
+            </h1>
 
             <div className="w-full md:flex-1 md:max-w-2xl md:mx-8">
               <div className="relative">
@@ -308,100 +310,115 @@ export default function HomePage() {
 
           {/* Contenido Principal */}
           <main className="flex-1">
-            {activeTab === 'empresas' ? (
+            {activeTab === "empresas" ? (
               <div className="bg-white rounded-lg shadow-sm border p-6">
-                <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-2">Empresas</h2>
-                <p className="text-gray-600 mb-4">Compra masiva y asignación de Gift Cards para tus colaboradores.</p>
-                <a href="/empresas" className="inline-block bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Ir al portal de empresas</a>
+                <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-2">
+                  Empresas
+                </h2>
+                <p className="text-gray-600 mb-4">
+                  Compra masiva y asignación de Gift Cards para tus
+                  colaboradores.
+                </p>
+                <a
+                  href="/empresas"
+                  className="inline-block bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                >
+                  Ir al portal de empresas
+                </a>
               </div>
             ) : (
-            <>
-            <div className="mb-4 md:mb-6">
-              <h2 className="text-xl md:text-2xl font-bold text-gray-900">
-                Todas las Gift Cards 🎁
-              </h2>
-              <p className="text-gray-600 mt-2 text-sm md:text-base">
-                {giftCards.length} gift cards disponibles con valores reales de BD
-              </p>
-            </div>
+              <>
+                <div className="mb-4 md:mb-6">
+                  <h2 className="text-xl md:text-2xl font-bold text-gray-900">
+                    Todas las Gift Cards 🎁
+                  </h2>
+                  <p className="text-gray-600 mt-2 text-sm md:text-base">
+                    {giftCards.length} gift cards disponibles con valores reales
+                    de BD
+                  </p>
+                </div>
 
-            {/* Grid de Gift Cards - Responsive */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-              {filteredGiftCards.map((card) => (
-                <div
-                  key={card.id}
-                  className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow"
-                >
-                  <div className="aspect-w-4 aspect-h-3">
-                    <div className="w-full h-32 md:h-48 bg-gradient-to-br from-blue-100 to-purple-100 rounded-t-lg flex items-center justify-center">
-                      <div className="text-center">
-                        <span className="text-2xl md:text-4xl">💳</span>
-                        <p className="text-gray-600 text-xs md:text-sm mt-2">
+                {/* Grid de Gift Cards - Responsive */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                  {filteredGiftCards.map((card) => (
+                    <div
+                      key={card.id}
+                      className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow"
+                    >
+                      <div className="aspect-w-4 aspect-h-3">
+                        <div className="w-full h-32 md:h-48 bg-gradient-to-br from-blue-100 to-purple-100 rounded-t-lg flex items-center justify-center">
+                          <div className="text-center">
+                            <span className="text-2xl md:text-4xl">💳</span>
+                            <p className="text-gray-600 text-xs md:text-sm mt-2">
+                              {card.company}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="p-3 md:p-4">
+                        <h3 className="font-semibold text-gray-900 mb-1 text-sm md:text-base">
+                          {card.name}
+                        </h3>
+                        <p className="text-gray-600 text-xs md:text-sm mb-3">
                           {card.company}
                         </p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="p-3 md:p-4">
-                    <h3 className="font-semibold text-gray-900 mb-1 text-sm md:text-base">
-                      {card.name}
-                    </h3>
-                    <p className="text-gray-600 text-xs md:text-sm mb-3">{card.company}</p>
 
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center space-x-1">
-                        <span className="text-yellow-500 text-sm md:text-base">⭐</span>
-                        <span className="text-xs md:text-sm text-gray-700">
-                          {card.rating}
-                        </span>
-                        <span className="text-xs text-gray-500">
-                          ({card.reviews})
-                        </span>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-lg md:text-2xl font-bold text-blue-600">
-                          {formatCLP(card.price)}
-                        </span>
-                        <p className="text-xs text-green-600">
-                          💾 Valor BD: ${card.price}
-                        </p>
-                      </div>
-                    </div>
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center space-x-1">
+                            <span className="text-yellow-500 text-sm md:text-base">
+                              ⭐
+                            </span>
+                            <span className="text-xs md:text-sm text-gray-700">
+                              {card.rating}
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              ({card.reviews})
+                            </span>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-lg md:text-2xl font-bold text-blue-600">
+                              {formatCLP(card.price)}
+                            </span>
+                            <p className="text-xs text-green-600">
+                              💾 Valor BD: ${card.price}
+                            </p>
+                          </div>
+                        </div>
 
-                    <div className="space-y-2">
-                      <button
-                        onClick={() =>
-                          (window.location.href = `/configurar?id=${card.id}`)
-                        }
-                        className="w-full bg-green-500 text-white py-2 px-3 md:px-4 rounded-lg hover:bg-green-600 transition-colors text-sm md:text-base"
-                      >
-                        🎯 Configurar Gift Card
-                      </button>
-                      
-                      <button
-                        onClick={() => handleAddToCart(card)}
-                        className="w-full bg-blue-500 text-white py-2 px-3 md:px-4 rounded-lg hover:bg-blue-600 transition-colors text-sm md:text-base"
-                      >
-                        🛒 Agregar al Carrito
-                      </button>
+                        <div className="space-y-2">
+                          <button
+                            onClick={() =>
+                              (window.location.href = `/configurar?id=${card.id}`)
+                            }
+                            className="w-full bg-green-500 text-white py-2 px-3 md:px-4 rounded-lg hover:bg-green-600 transition-colors text-sm md:text-base"
+                          >
+                            🎯 Configurar Gift Card
+                          </button>
+
+                          <button
+                            onClick={() => handleAddToCart(card)}
+                            className="w-full bg-blue-500 text-white py-2 px-3 md:px-4 rounded-lg hover:bg-blue-600 transition-colors text-sm md:text-base"
+                          >
+                            🛒 Agregar al Carrito
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                  </div>
+                  ))}
                 </div>
-              ))}
-            </div>
 
-            {giftCards.length === 0 && (
-              <div className="text-center py-8 md:py-12">
-                <span className="text-4xl md:text-6xl">🎁</span>
-                <h3 className="text-lg md:text-xl font-semibold text-gray-600 mt-4">
-                  No se encontraron gift cards
-                </h3>
-                <p className="text-gray-500 mt-2 text-sm md:text-base">
-                  Verifica la conexión con la base de datos
-                </p>
-              </div>
-            )}
-            </>
+                {giftCards.length === 0 && (
+                  <div className="text-center py-8 md:py-12">
+                    <span className="text-4xl md:text-6xl">🎁</span>
+                    <h3 className="text-lg md:text-xl font-semibold text-gray-600 mt-4">
+                      No se encontraron gift cards
+                    </h3>
+                    <p className="text-gray-500 mt-2 text-sm md:text-base">
+                      Verifica la conexión con la base de datos
+                    </p>
+                  </div>
+                )}
+              </>
             )}
           </main>
         </div>
