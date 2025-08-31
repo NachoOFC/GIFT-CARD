@@ -14,11 +14,17 @@ import {
   HelpCircle,
   Shield,
   AlertCircle,
-  Loader2
+  Loader2,
+  ArrowLeft,
+  Star,
+  Gift,
+  Clock,
+  Check
 } from 'lucide-react';
 
 function PaymentSuccessContent() {
   const searchParams = useSearchParams();
+  
   // Forzar login/guest antes de mostrar la página de éxito
   if (typeof window !== 'undefined') {
     const currentUser = localStorage.getItem('currentUser');
@@ -28,6 +34,7 @@ function PaymentSuccessContent() {
       return null;
     }
   }
+
   const [showConfetti, setShowConfetti] = useState(false);
   const [progressComplete, setProgressComplete] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -76,8 +83,14 @@ function PaymentSuccessContent() {
           console.log('✅ API Response:', data);
           
           if (data.success) {
-            setGiftCard(data.data);
+            // Asegurar que tenemos el order_id correcto
+            const giftCardData = {
+              ...data.data,
+              order_id: data.data.order_id || orderId || `ORDER-${Date.now()}`
+            };
+            setGiftCard(giftCardData);
             setEmailSent(data.data.email_enviado);
+            console.log('🎯 Gift Card data saved:', giftCardData);
           } else {
             throw new Error(data.error);
           }
@@ -98,7 +111,7 @@ function PaymentSuccessContent() {
         
         setProgressComplete(true);
         setShowConfetti(true);
-        setTimeout(() => setShowConfetti(false), 3000);
+        setTimeout(() => setShowConfetti(false), 4000);
         
       } catch (err) {
         console.error('Error generando gift card:', err);
@@ -128,6 +141,15 @@ function PaymentSuccessContent() {
     });
   };
 
+  const generateRandomCode = () => {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let result = 'GC-';
+    for (let i = 0; i < 8; i++) {
+      result += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    return result;
+  };
+
   const copyToClipboard = async (text) => {
     try {
       await navigator.clipboard.writeText(text);
@@ -155,19 +177,27 @@ function PaymentSuccessContent() {
     }
   };
 
+  const viewReceipt = () => {
+    const receiptId = giftCard?.order_id || orderId || `ORDER-${Date.now()}`;
+    window.open(`/receipt/${receiptId}`, '_blank');
+  };
+
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="bg-white rounded-lg shadow-sm border border-red-200 p-8 max-w-md mx-4">
+      <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-red-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl shadow-2xl border border-red-100 p-8 max-w-md mx-auto">
           <div className="text-center">
-            <AlertCircle className="w-16 h-16 text-red-600 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Error en el procesamiento</h2>
-            <p className="text-red-600 mb-6">{error}</p>
+            <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <AlertCircle className="w-10 h-10 text-red-600" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Oops! Algo salió mal</h2>
+            <p className="text-red-600 mb-8 text-sm bg-red-50 p-3 rounded-lg">{error}</p>
             <button
               onClick={() => window.location.reload()}
-              className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg transition-colors"
+              className="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-xl transition-all transform hover:scale-105 font-medium shadow-lg"
             >
-              Reintentar
+              <RefreshCw className="w-4 h-4 inline mr-2" />
+              Intentar nuevamente
             </button>
           </div>
         </div>
@@ -176,235 +206,282 @@ function PaymentSuccessContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 relative overflow-hidden">
-      {/* Back to Home Button - Top Left */}
-      <button
-        onClick={() => window.location.href = '/'}
-        className="absolute top-6 left-6 z-10 bg-white hover:bg-gray-50 text-gray-900 py-2 px-4 rounded-lg transition-all duration-200 border border-gray-300 font-medium shadow-md hover:shadow-lg transform hover:scale-105 flex items-center"
-      >
-        ← Volver al Inicio
-      </button>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 relative overflow-hidden">
       {/* Animated Background Elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-green-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-600/5 rounded-full blur-3xl animate-pulse delay-2000"></div>
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-br from-green-400/20 to-blue-400/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-br from-purple-400/10 to-pink-400/10 rounded-full blur-3xl animate-pulse delay-2000"></div>
       </div>
 
-      {/* Confetti Effect */}
+      {/* Enhanced Confetti Effect */}
       {showConfetti && (
         <div className="fixed inset-0 pointer-events-none z-50">
-          <div className="absolute top-0 left-1/4 w-2 h-2 bg-blue-400 animate-bounce" style={{animationDelay: '0.1s'}}></div>
-          <div className="absolute top-0 left-1/2 w-2 h-2 bg-green-400 animate-bounce" style={{animationDelay: '0.3s'}}></div>
-          <div className="absolute top-0 left-3/4 w-2 h-2 bg-blue-600 animate-bounce" style={{animationDelay: '0.2s'}}></div>
-          <div className="absolute top-1/4 left-1/3 w-2 h-2 bg-green-500 animate-bounce" style={{animationDelay: '0.4s'}}></div>
-          <div className="absolute top-1/4 right-1/3 w-2 h-2 bg-blue-500 animate-bounce" style={{animationDelay: '0.2s'}}></div>
-          <div className="absolute top-3/4 left-1/4 w-2 h-2 bg-green-600 animate-bounce" style={{animationDelay: '0.5s'}}></div>
+          {[...Array(20)].map((_, i) => (
+            <div
+              key={i}
+              className={`absolute w-3 h-3 ${
+                i % 4 === 0 ? 'bg-yellow-400' : 
+                i % 4 === 1 ? 'bg-blue-500' : 
+                i % 4 === 2 ? 'bg-green-500' : 'bg-pink-500'
+              } rounded-full animate-bounce`}
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 50}%`,
+                animationDelay: `${Math.random() * 2}s`,
+                animationDuration: `${2 + Math.random() * 2}s`
+              }}
+            />
+          ))}
         </div>
       )}
 
-      <div className="relative z-10 container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="text-center mb-8 animate-fade-in">
-          <div className="flex justify-center items-center mb-6">
+      {/* Header with Navigation */}
+      <header className="relative z-10 bg-white/80 backdrop-blur-md border-b border-gray-100 sticky top-0">
+        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+          <button
+            onClick={() => window.location.href = '/'}
+            className="flex items-center text-gray-700 hover:text-blue-600 transition-colors font-medium"
+          >
+            <ArrowLeft className="w-5 h-5 mr-2" />
+            Volver al inicio
+          </button>
+          
+          <div className="flex items-center">
+            <div className="w-8 h-8 bg-gradient-to-r from-green-400 to-green-600 rounded-lg flex items-center justify-center">
+              <CheckCircle className="w-5 h-5 text-white" />
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div className="relative z-10 max-w-7xl mx-auto px-4 py-8">
+        {/* Success Header */}
+        <div className="text-center mb-12 animate-fade-in">
+          <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg border-4 border-green-100">
             <img 
               src="/logo/mline.jpg" 
               alt="Mline Logo" 
-              className="h-20 w-20 md:h-24 md:w-24 object-contain rounded-lg shadow-lg"
+              className="w-16 h-16 object-contain rounded-xl"
             />
           </div>
-          <div className="flex items-center justify-center mb-2">
-            <Sparkles className="w-6 h-6 text-green-500 mr-2 animate-pulse" />
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-900">
-              ¡Gracias por tu compra!
-            </h2>
-            <Sparkles className="w-6 h-6 text-green-500 ml-2 animate-pulse" />
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+            ¡Pago exitoso!
+          </h1>
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            Tu Gift Card ha sido generada exitosamente y está lista para usar
+          </p>
+          <div className="flex items-center justify-center mt-6">
+            {[...Array(5)].map((_, i) => (
+              <Star key={i} className="w-6 h-6 text-yellow-400 fill-current mx-1" />
+            ))}
           </div>
-          <p className="text-xl text-gray-600">Tu Gift Card ya está lista</p>
         </div>
 
-        {/* Progress Bar */}
+        {/* Loading State */}
         {loading && (
-          <div className="mb-8 max-w-md mx-auto">
-            <div className="bg-gray-200 rounded-full p-1">
-              <div className="h-2 bg-gradient-to-r from-blue-500 to-green-500 rounded-full animate-pulse"></div>
-            </div>
-            <div className="flex items-center justify-center mt-4">
-              <Loader2 className="w-6 h-6 text-blue-600 animate-spin mr-2" />
-              <p className="text-center text-gray-600">Generando tu Gift Card...</p>
+          <div className="mb-12 max-w-md mx-auto">
+            <div className="bg-white rounded-2xl shadow-lg p-8">
+              <div className="text-center">
+                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Procesando tu Gift Card</h3>
+                <p className="text-gray-600 mb-6">Esto solo tomará unos segundos...</p>
+                <div className="bg-gray-200 rounded-full h-2 mb-4">
+                  <div className="h-2 bg-gradient-to-r from-blue-500 to-green-500 rounded-full animate-pulse" style={{width: '75%'}}></div>
+                </div>
+                <div className="flex justify-between text-sm text-gray-500">
+                  <span>Verificando pago</span>
+                  <span>75%</span>
+                </div>
+              </div>
             </div>
           </div>
         )}
 
+        {/* Main Content */}
         {progressComplete && giftCard && (
-          <div className="animate-fade-in-up">
-            {/* Main Content */}
-            <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-8">
-              {/* Gift Card Info */}
-              <div className="bg-white rounded-lg shadow-sm border p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-xl font-bold text-gray-900 flex items-center">
-                    <CreditCard className="w-6 h-6 mr-2 text-blue-600" />
-                    Resumen de Gift Card
-                  </h3>
-                  <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium">
-                    ✅ {giftCard.estado}
+          <div className="animate-fade-in-up space-y-8">
+            {/* Gift Card Display */}
+            <div className="bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 rounded-3xl p-8 text-white shadow-2xl max-w-4xl mx-auto relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+              <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12"></div>
+              
+              <div className="relative z-10">
+                <div className="flex items-center justify-between mb-8">
+                  <div className="flex items-center">
+                    <Gift className="w-8 h-8 mr-3" />
+                    <h2 className="text-2xl font-bold">Mline Gift Card</h2>
+                  </div>
+                  <span className="bg-white/20 px-4 py-2 rounded-full text-sm font-medium backdrop-blur-sm">
+                    {giftCard.estado}
                   </span>
                 </div>
-
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg border border-gray-200">
-                    <span className="text-gray-600">Código:</span>
-                    <div className="flex items-center">
-                      <span className="text-gray-900 font-mono font-bold mr-2">{giftCard.codigo}</span>
-                      <button
-                        onClick={() => copyToClipboard(giftCard.codigo)}
-                        className="text-blue-600 hover:text-blue-700 transition-colors"
-                        title="Copiar código"
-                      >
-                        <Copy className="w-4 h-4" />
-                      </button>
+                
+                <div className="grid md:grid-cols-2 gap-8 items-center">
+                  <div>
+                    <div className="mb-6">
+                      <p className="text-white/80 text-sm mb-2">Código de Gift Card</p>
+                      <div className="flex items-center justify-between bg-white/20 rounded-xl p-4 backdrop-blur-sm">
+                        <code className="text-xl font-bold tracking-wider">
+                          {giftCard.codigo || giftCard.gift_card_code || generateRandomCode()}
+                        </code>
+                        <button
+                          onClick={() => copyToClipboard(giftCard.codigo || giftCard.gift_card_code || generateRandomCode())}
+                          className="bg-white/20 hover:bg-white/30 p-2 rounded-lg transition-colors"
+                          title="Copiar código"
+                        >
+                          <Copy className="w-5 h-5" />
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div className="mb-6">
+                      <p className="text-white/80 text-sm mb-2">Valor</p>
+                      <p className="text-4xl font-bold">
+                        {formatCurrency(giftCard.total || giftCard.valor_inicial || amount)}
+                      </p>
+                    </div>
+                    
+                    <div className="flex items-center text-white/80">
+                      <Clock className="w-5 h-5 mr-2" />
+                      <span>Válido hasta {formatDate(giftCard.fecha_expiracion)}</span>
                     </div>
                   </div>
                   
-                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg border border-gray-200">
-                    <span className="text-gray-600">Monto:</span>
-                    <span className="text-2xl font-bold text-blue-600">
-                      {formatCurrency(giftCard.total || giftCard.valor_inicial || amount)}
-                    </span>
+                  <div className="text-center">
+                    <div className="bg-white p-6 rounded-2xl shadow-lg inline-block mb-4">
+                      <img 
+                        src={giftCard.qr_code} 
+                        alt="QR Code para Gift Card" 
+                        className="w-40 h-40"
+                      />
+                    </div>
+                    <p className="text-white/80 text-sm">
+                      Escanea para activar
+                    </p>
                   </div>
-                  
-                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg border border-gray-200">
-                    <span className="text-gray-600 flex items-center">
-                      <Calendar className="w-4 h-4 mr-1" />
-                      Expira:
-                    </span>
-                    <span className="text-gray-900 font-medium">
-                      {formatDate(giftCard.fecha_expiracion)}
-                    </span>
-                  </div>
-                </div>
-
-                {copied && (
-                  <div className="mt-4 p-2 bg-green-100 text-green-700 rounded-lg text-center text-sm border border-green-200">
-                    ✅ Código copiado al portapapeles
-                  </div>
-                )}
-              </div>
-
-              {/* QR Code Section */}
-              <div className="bg-white rounded-lg shadow-sm border p-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-6 text-center">Código QR</h3>
-                
-                <div className="flex flex-col items-center">
-                  <div className="bg-white p-4 rounded-lg shadow-md border mb-4 animate-fade-in">
-                    <img 
-                      src={giftCard.qr_code} 
-                      alt="QR Code para Gift Card" 
-                      className="w-48 h-48"
-                    />
-                  </div>
-                  
-                  <button
-                    onClick={downloadQR}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium flex items-center transition-all transform hover:scale-105 mb-4"
-                  >
-                    <Download className="w-5 h-5 mr-2" />
-                    Descargar QR
-                  </button>
-                  
-                  <p className="text-gray-600 text-sm text-center max-w-xs">
-                    Escanea este código QR para activar tu Gift Card rápidamente
-                  </p>
                 </div>
               </div>
             </div>
 
-            {/* Activation Button */}
-            <div className="text-center my-8">
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-2xl mx-auto">
               <button
                 onClick={activateGiftCard}
-                className="bg-green-500 hover:bg-green-600 text-white px-12 py-4 rounded-lg font-bold text-lg flex items-center mx-auto transition-all transform hover:scale-105 shadow-lg"
+                className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-8 py-4 rounded-xl font-semibold text-lg flex items-center justify-center transition-all transform hover:scale-105 shadow-lg"
               >
                 <CreditCard className="w-6 h-6 mr-3" />
-                Activar mi Gift Card
-                <Sparkles className="w-6 h-6 ml-3 animate-pulse" />
+                Activar Gift Card
+                <Sparkles className="w-6 h-6 ml-3" />
+              </button>
+              
+              <button
+                onClick={downloadQR}
+                className="bg-white hover:bg-gray-50 text-gray-900 px-8 py-4 rounded-xl font-semibold border border-gray-200 flex items-center justify-center transition-all transform hover:scale-105 shadow-md"
+              >
+                <Download className="w-6 h-6 mr-3" />
+                Descargar QR
               </button>
             </div>
 
-            {/* Instructions */}
-            <div className="bg-white rounded-lg shadow-sm border p-6 max-w-2xl mx-auto mb-8">
-              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
-                <HelpCircle className="w-5 h-5 mr-2 text-blue-600" />
-                Cómo usar tu Gift Card
-              </h3>
-              <ol className="space-y-3 text-gray-600">
-                <li className="flex items-start">
-                  <span className="bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold mr-3 mt-0.5">1</span>
-                  Recibirás un email con todos los detalles en tu bandeja de entrada.
-                </li>
-                <li className="flex items-start">
-                  <span className="bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold mr-3 mt-0.5">2</span>
-                  Guarda tu código y QR en un lugar seguro o en tu teléfono.
-                </li>
-                <li className="flex items-start">
-                  <span className="bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold mr-3 mt-0.5">3</span>
-                  Activa tu Gift Card y úsala antes de la fecha de vencimiento.
-                </li>
-              </ol>
-            </div>
-
-            {/* Email Confirmation */}
-            <div className={`rounded-lg shadow-sm border p-6 max-w-2xl mx-auto mb-8 ${
-              emailSent 
-                ? 'bg-green-50 border-green-200' 
-                : 'bg-yellow-50 border-yellow-200'
-            }`}>
-              <div className="flex items-center justify-between">
+            {/* Copy Success Message */}
+            {copied && (
+              <div className="fixed bottom-4 right-4 bg-green-600 text-white px-6 py-3 rounded-xl shadow-lg animate-bounce">
                 <div className="flex items-center">
-                  {emailSent ? (
-                    <CheckCircle className="w-6 h-6 text-green-600 mr-3" />
-                  ) : (
-                    <Mail className="w-6 h-6 text-yellow-600 mr-3" />
-                  )}
-                  <div>
-                    <p className="text-gray-900 font-medium">
-                      {emailSent ? 'Email enviado correctamente' : 'Enviando email...'}
-                    </p>
-                    <p className="text-gray-600 text-sm">
-                      {emailSent 
-                        ? `Hemos enviado una copia a ${giftCard.email_destinatario}`
-                        : 'El email con tu Gift Card llegará en unos minutos'
-                      }
-                    </p>
-                  </div>
+                  <Check className="w-5 h-5 mr-2" />
+                  Código copiado
                 </div>
-                {emailSent && (
-                  <button className="text-green-600 hover:text-green-700 transition-colors flex items-center text-sm">
-                    <RefreshCw className="w-4 h-4 mr-1" />
-                    Reenviar
-                  </button>
-                )}
+              </div>
+            )}
+
+            {/* Email Status */}
+            <div className="max-w-2xl mx-auto">
+              <div className={`rounded-2xl shadow-lg p-6 border ${
+                emailSent 
+                  ? 'bg-green-50 border-green-200' 
+                  : 'bg-yellow-50 border-yellow-200'
+              }`}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center mr-4 ${
+                      emailSent ? 'bg-green-100' : 'bg-yellow-100'
+                    }`}>
+                      {emailSent ? (
+                        <CheckCircle className="w-6 h-6 text-green-600" />
+                      ) : (
+                        <Mail className="w-6 h-6 text-yellow-600" />
+                      )}
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-900 mb-1">
+                        {emailSent ? '¡Email enviado!' : 'Enviando confirmación...'}
+                      </h4>
+                      <p className="text-gray-600 text-sm">
+                        {emailSent 
+                          ? `Copia enviada a ${giftCard.email_destinatario}`
+                          : 'Recibirás una copia en tu email'
+                        }
+                      </p>
+                    </div>
+                  </div>
+                  {emailSent && (
+                    <button className="text-green-600 hover:text-green-700 transition-colors flex items-center text-sm font-medium">
+                      <RefreshCw className="w-4 h-4 mr-1" />
+                      Reenviar
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
 
-            {/* Footer */}
-            <div className="bg-white rounded-lg shadow-sm border p-6 max-w-4xl mx-auto">
-              <div className="grid md:grid-cols-3 gap-6 text-center">
-                <div className="flex flex-col items-center">
-                  <Mail className="w-8 h-8 text-blue-600 mb-2" />
-                  <h4 className="text-gray-900 font-medium mb-1">Soporte Técnico</h4>
-                  <p className="text-gray-600 text-sm">moonsystemspv@gmail.com</p>
+            {/* Instructions */}
+            <div className="bg-white rounded-2xl shadow-lg p-8 max-w-4xl mx-auto">
+              <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+                <HelpCircle className="w-7 h-7 mr-3 text-blue-600" />
+                Cómo usar tu Gift Card
+              </h3>
+              <div className="grid md:grid-cols-3 gap-6">
+                <div className="text-center p-6 bg-blue-50 rounded-xl">
+                  <div className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center mx-auto mb-4 font-bold text-lg">1</div>
+                  <h4 className="font-semibold text-gray-900 mb-2">Revisa tu email</h4>
+                  <p className="text-gray-600 text-sm">Encontrarás todos los detalles en tu bandeja de entrada</p>
                 </div>
-                <div className="flex flex-col items-center">
-                  <Shield className="w-8 h-8 text-green-600 mb-2" />
-                  <h4 className="text-gray-900 font-medium mb-1">Seguridad</h4>
-                  <p className="text-gray-600 text-sm">Transacciones protegidas</p>
+                <div className="text-center p-6 bg-green-50 rounded-xl">
+                  <div className="w-12 h-12 bg-green-600 text-white rounded-full flex items-center justify-center mx-auto mb-4 font-bold text-lg">2</div>
+                  <h4 className="font-semibold text-gray-900 mb-2">Guarda tu código</h4>
+                  <p className="text-gray-600 text-sm">Mantén el código QR en un lugar seguro</p>
                 </div>
-                <div className="flex flex-col items-center">
-                  <HelpCircle className="w-8 h-8 text-blue-600 mb-2" />
-                  <h4 className="text-gray-900 font-medium mb-1">Centro de Ayuda</h4>
-                  <p className="text-gray-600 text-sm">FAQ y guías de uso</p>
+                <div className="text-center p-6 bg-purple-50 rounded-xl">
+                  <div className="w-12 h-12 bg-purple-600 text-white rounded-full flex items-center justify-center mx-auto mb-4 font-bold text-lg">3</div>
+                  <h4 className="font-semibold text-gray-900 mb-2">Activa y disfruta</h4>
+                  <p className="text-gray-600 text-sm">Úsala antes de la fecha de vencimiento</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Support Section */}
+            <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-2xl shadow-2xl p-8 text-white max-w-4xl mx-auto">
+              <div className="text-center mb-8">
+                <h3 className="text-2xl font-bold mb-2">¿Necesitas ayuda?</h3>
+                <p className="text-gray-300">Estamos aquí para asistirte en cualquier momento</p>
+              </div>
+              <div className="grid md:grid-cols-3 gap-6">
+                <div className="text-center p-6 bg-white/10 rounded-xl backdrop-blur-sm">
+                  <Mail className="w-8 h-8 mx-auto mb-4 text-blue-400" />
+                  <h4 className="font-semibold mb-2">Soporte Técnico</h4>
+                  <p className="text-gray-300 text-sm">moonsystemspv@gmail.com</p>
+                </div>
+                <div className="text-center p-6 bg-white/10 rounded-xl backdrop-blur-sm">
+                  <Shield className="w-8 h-8 mx-auto mb-4 text-green-400" />
+                  <h4 className="font-semibold mb-2">Transacciones Seguras</h4>
+                  <p className="text-gray-300 text-sm">Protegidas con SSL</p>
+                </div>
+                <div className="text-center p-6 bg-white/10 rounded-xl backdrop-blur-sm">
+                  <HelpCircle className="w-8 h-8 mx-auto mb-4 text-purple-400" />
+                  <h4 className="font-semibold mb-2">Centro de Ayuda</h4>
+                  <p className="text-gray-300 text-sm">FAQ y tutoriales</p>
                 </div>
               </div>
             </div>
@@ -414,14 +491,14 @@ function PaymentSuccessContent() {
 
       <style jsx>{`
         @keyframes fade-in {
-          from { opacity: 0; }
-          to { opacity: 1; }
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
         }
         
         @keyframes fade-in-up {
           from { 
             opacity: 0; 
-            transform: translateY(20px); 
+            transform: translateY(30px); 
           }
           to { 
             opacity: 1; 
@@ -430,11 +507,11 @@ function PaymentSuccessContent() {
         }
         
         .animate-fade-in {
-          animation: fade-in 1s ease-out;
+          animation: fade-in 0.8s ease-out;
         }
         
         .animate-fade-in-up {
-          animation: fade-in-up 0.8s ease-out;
+          animation: fade-in-up 1s ease-out;
         }
       `}</style>
     </div>
@@ -444,10 +521,13 @@ function PaymentSuccessContent() {
 // Componente de fallback para Suspense
 function PaymentSuccessFallback() {
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex items-center justify-center">
       <div className="text-center">
-        <Loader2 className="w-12 h-12 text-blue-600 animate-spin mx-auto mb-4" />
-        <p className="text-gray-600">Cargando página de confirmación...</p>
+        <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+          <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+        </div>
+        <h2 className="text-xl font-semibold text-gray-900 mb-2">Cargando confirmación...</h2>
+        <p className="text-gray-600">Preparando tu página de éxito</p>
       </div>
     </div>
   );
@@ -459,4 +539,4 @@ export default function PaymentSuccessPage() {
       <PaymentSuccessContent />
     </Suspense>
   );
-}  
+}
