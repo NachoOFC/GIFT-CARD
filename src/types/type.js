@@ -24,7 +24,8 @@ export const MONTO_STEP = 500;
  * @returns {string}
  */
 export function formatCLP(amount) {
-	return amount.toLocaleString(LOCALE, {
+	const value = parseFloat(amount) || 0;
+	return value.toLocaleString(LOCALE, {
 		style: 'currency',
 		currency: CURRENCY,
 		minimumFractionDigits: 0,

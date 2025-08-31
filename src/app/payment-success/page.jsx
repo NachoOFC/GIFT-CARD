@@ -55,6 +55,8 @@ function PaymentSuccessContent() {
         
         // Si tenemos parámetros reales, generar gift card
         if (amount && email) {
+          console.log('🔄 Generating gift card with params:', { orderId, amount, email, name });
+          
           const response = await fetch('/api/giftcard/generate', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -62,13 +64,16 @@ function PaymentSuccessContent() {
               order_id: orderId || `ORDER-${Date.now()}`,
               monto: parseFloat(amount) || 25000,
               email_destinatario: email,
-              mensaje: '¡Gracias por tu compra! Tu Gift Card está lista.',
-              customer_name: name || 'Cliente',
-              tipo_gift_card: 'FISICA' // Por defecto, puede venir del carrito después
+              customer_name: name || 'Cliente'
             })
           });
 
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+
           const data = await response.json();
+          console.log('✅ API Response:', data);
           
           if (data.success) {
             setGiftCard(data.data);
@@ -107,11 +112,12 @@ function PaymentSuccessContent() {
   }, [orderId, amount]);
 
   const formatCurrency = (amount) => {
+    const value = parseFloat(amount) || 0;
     return new Intl.NumberFormat('es-CL', {
       style: 'currency',
       currency: 'CLP',
       minimumFractionDigits: 0
-    }).format(amount);
+    }).format(value);
   };
 
   const formatDate = (dateString) => {
@@ -264,7 +270,7 @@ function PaymentSuccessContent() {
                   <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg border border-gray-200">
                     <span className="text-gray-600">Monto:</span>
                     <span className="text-2xl font-bold text-blue-600">
-                      {formatCurrency(giftCard.valor_inicial)}
+                      {formatCurrency(giftCard.total || giftCard.valor_inicial || amount)}
                     </span>
                   </div>
                   

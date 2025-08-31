@@ -21,7 +21,8 @@ export default function CartPage() {
   const [emailError, setEmailError] = useState('')
 
   const formatCurrency = (value) => {
-    return '$' + parseInt(value.toString()).toLocaleString('es-CL')
+    const numValue = parseFloat(value) || 0;
+    return '$' + Math.round(numValue).toLocaleString('es-CL');
   }
 
   const handleCheckout = async () => {

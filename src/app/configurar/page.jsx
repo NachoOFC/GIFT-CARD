@@ -171,7 +171,8 @@ export default function ConfigurarPage() {
   }
 
   const formatCurrency = (value) => {
-    return '$' + parseInt(value.toString()).toLocaleString('es-CL')
+    const numValue = parseFloat(value) || 0;
+    return '$' + Math.round(numValue).toLocaleString('es-CL');
   }
 
   const getCategoryName = (categoryId) => {
