@@ -539,14 +539,14 @@ async function sendReceiptEmail({ to, purchaseData, transactionId, qrDataURL }) 
                   <!-- Actions Section -->
                   <div class="actions-section">
                     <div class="action-buttons">
-                      <a href="${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/receipt/${purchaseData.orderNumber}" 
+                      <a href="http://localhost:3000/receipt/${purchaseData.orderNumber}" 
                          class="btn-primary"
                          style="color: white; text-decoration: none;">
                         <span class="btn-icon">📄</span>
                         Ver Comprobante Completo
                       </a>
                       
-                      <a href="${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/receipt/${purchaseData.orderNumber}?print=true" 
+                      <a href="http://localhost:3000/receipt/${purchaseData.orderNumber}?print=true" 
                          class="btn-secondary"
                          style="color: #475569; text-decoration: none;">
                         <span class="btn-icon">🖨️</span>
@@ -646,8 +646,8 @@ export async function POST(request) {
     console.log('✅ Orden creada:', orderId, 'con número:', order_id);
 
     // Generar datos para el QR code de la gift card (consistente con CreateQr.jsx)
-    const activationUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3001'}/activate/${order_id}`;
-    const receiptUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3001'}/receipt/${order_id}`;
+    const activationUrl = `http://localhost:3000/activate/${order_id}`;
+    const receiptUrl = `http://localhost:3000/receipt/${order_id}`;
     
     const qrData = JSON.stringify({
       type: 'GIFT_CARD',

@@ -366,26 +366,6 @@ function PaymentSuccessContent() {
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-2xl mx-auto">
-              <button
-                onClick={activateGiftCard}
-                className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-8 py-4 rounded-xl font-semibold text-lg flex items-center justify-center transition-all transform hover:scale-105 shadow-lg"
-              >
-                <CreditCard className="w-6 h-6 mr-3" />
-                Activar Gift Card
-                <Sparkles className="w-6 h-6 ml-3" />
-              </button>
-              
-              <button
-                onClick={downloadQR}
-                className="bg-white hover:bg-gray-50 text-gray-900 px-8 py-4 rounded-xl font-semibold border border-gray-200 flex items-center justify-center transition-all transform hover:scale-105 shadow-md"
-              >
-                <Download className="w-6 h-6 mr-3" />
-                Descargar QR
-              </button>
-            </div>
-
             {/* Copy Success Message */}
             {copied && (
               <div className="fixed bottom-4 right-4 bg-green-600 text-white px-6 py-3 rounded-xl shadow-lg animate-bounce">
