@@ -139,7 +139,7 @@ export default function HomePage() {
                   <span>Personas</span>
                 </button>
                 <button
-                  onClick={() => setActiveTab("empresas")}
+                  onClick={() => window.location.href = '/empresas'}
                   className={`px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors ${
                     activeTab === "empresas"
                       ? "bg-blue-100 text-blue-700"
@@ -158,6 +158,12 @@ export default function HomePage() {
                 className="hidden md:inline-block bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
               >
                 Gestionar Gift Cards
+              </a>
+              <a
+                href="/admin/orders"
+                className="hidden md:inline-block bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600"
+              >
+                Panel Admin
               </a>
 
               <a

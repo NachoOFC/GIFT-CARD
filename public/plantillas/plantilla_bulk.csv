@@ -1,0 +1,4 @@
+codigo,valor_inicial,email_destinatario,fecha_expiracion,mensaje
+EMP001,50000,juan.perez@empresa.com,2024-12-31,Felicitaciones por tu excelente trabajo
+EMP002,75000,maria.garcia@empresa.com,2024-12-31,Gracias por tu dedicación
+EMP003,100000,carlos.rodriguez@empresa.com,2024-12-31,Reconocimiento por tu contribución
