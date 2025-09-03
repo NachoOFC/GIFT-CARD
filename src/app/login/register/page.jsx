@@ -4,7 +4,7 @@ import styles from '../Login.module.css';
 import { useRouter } from 'next/navigation';
 
 export default function Register() {
-  const [form, setForm] = useState({ email: '', password: '', confirm: '' });
+  const [form, setForm] = useState({ nombre: '', usuario: '', gmail: '', password: '', confirm: '' });
   const router = useRouter();
 
   const handleChange = (e) => {
@@ -14,16 +14,25 @@ export default function Register() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!form.email || !form.password) return alert('Completa los campos');
+  if (!form.usuario || !form.password) return alert('Completa los campos');
     if (form.password !== form.confirm) return alert('Las contraseñas no coinciden');
 
-    const users = JSON.parse(localStorage.getItem('users') || '[]');
-    if (users.find(u => u.email === form.email)) return alert('Usuario ya registrado');
-
-    users.push({ email: form.email, password: form.password });
-    localStorage.setItem('users', JSON.stringify(users));
-    alert('Registro exitoso. Ya puedes iniciar sesión.');
-    router.push('/login');
+    // Enviar al servidor para persistir en la tabla `usuario`
+    fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ nombre: form.nombre, usuario: form.usuario, gmail: form.gmail, password: form.password })
+    })
+      .then(async res => {
+        const json = await res.json();
+        if (!res.ok) throw new Error(json?.message || 'Error al registrar');
+        alert('Registro exitoso. Ya puedes iniciar sesión.');
+        router.push('/login');
+      })
+      .catch(err => {
+        console.error('Registro error:', err);
+        alert(err.message || 'Error al registrar');
+      });
   };
 
   return (
@@ -35,13 +44,37 @@ export default function Register() {
         <form className={styles.form} onSubmit={handleSubmit}>
           <div className={styles.inputGroup}>
             <input
-              id="email"
-              name="email"
+              id="nombre"
+              name="nombre"
+              type="text"
+              required
+              className={styles.input}
+              placeholder="Nombre completo"
+              value={form.nombre}
+              onChange={handleChange}
+            />
+          </div>
+
+          <div className={styles.inputGroup}>
+            <input
+              id="usuario"
+              name="usuario"
               type="email"
               required
               className={styles.input}
-              placeholder="Correo electrónico"
-              value={form.email}
+              placeholder="Correo electrónico (usuario)"
+              value={form.usuario}
+              onChange={handleChange}
+            />
+          </div>
+          <div className={styles.inputGroup}>
+            <input
+              id="gmail"
+              name="gmail"
+              type="email"
+              className={styles.input}
+              placeholder="Gmail (opcional)"
+              value={form.gmail}
               onChange={handleChange}
             />
           </div>
