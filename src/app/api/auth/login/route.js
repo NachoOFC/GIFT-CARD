@@ -14,19 +14,13 @@ export async function POST(request) {
 
     const connection = await pool.getConnection();
     try {
-      console.log('🔍 Buscando usuario con email:', email);
-      
       // Buscar usuario por email (gmail) o por usuario
       const [users] = await connection.query(
         'SELECT id, nombre, usuario, gmail, password, perfil, estado FROM usuarios WHERE (gmail = ? OR usuario = ?)',
         [email, email]
       );
 
-      console.log('👥 Usuarios encontrados:', users.length);
-      console.log('📋 Datos de usuarios:', users);
-
       if (users.length === 0) {
-        console.log('❌ No se encontró usuario');
         return Response.json({
           success: false,
           message: 'Usuario o contraseña incorrectos'
@@ -34,13 +28,9 @@ export async function POST(request) {
       }
 
       const user = users[0];
-      console.log('🔑 Password en BD:', user.password);
-      console.log('🔑 Password enviado:', password);
-      console.log('🔑 Coinciden:', user.password === password);
 
       // Verificar contraseña (comparación simple - en producción usar bcrypt)
       if (user.password !== password) {
-        console.log('❌ Contraseña incorrecta');
         return Response.json({
           success: false,
           message: 'Usuario o contraseña incorrectos'
