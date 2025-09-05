@@ -19,19 +19,35 @@ const Login = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Lógica simple: validar contra un 'usuario' guardado en localStorage
-    const users = JSON.parse(localStorage.getItem('users') || '[]');
-    const found = users.find(u => u.email === formData.email && u.password === formData.password);
-    if (found) {
-      // si autenticación exitosa, eliminar flag de invitado si existía
-      localStorage.removeItem('guest');
-      localStorage.setItem('currentUser', JSON.stringify({ email: found.email }));
-  // redirigir a la sección antigua donde se mostraban todas las gift cards
-  router.push('/home#list');
-    } else {
-      alert('Usuario o contraseña incorrectos. Puedes registrarte primero.');
+    
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Si autenticación exitosa, eliminar flag de invitado si existía
+        localStorage.removeItem('guest');
+        localStorage.setItem('currentUser', JSON.stringify(data.data));
+        // Redirigir a la sección antigua donde se mostraban todas las gift cards
+        router.push('/home#list');
+      } else {
+        alert(data.message || 'Usuario o contraseña incorrectos. Puedes registrarte primero.');
+      }
+    } catch (error) {
+      console.error('Error en login:', error);
+      alert('Error de conexión. Intenta nuevamente.');
     }
   };
 
