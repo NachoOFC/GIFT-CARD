@@ -9,32 +9,29 @@ async function testEmailConfig() {
   console.log('GMAIL_APP_PASSWORD:', process.env.GMAIL_APP_PASSWORD ? '***set***' : '***NOT SET***');
   
   try {
-    // Test transporter creation
+  const user = (process.env.GMAIL_USER || '').trim();
+  const pass = (process.env.GMAIL_APP_PASSWORD || '').trim().replace(/\s+/g, '');
+  console.log('Sanitized app password length:', pass ? pass.length : 0);
+
+    // Test transporter creation (usar SMTP directo y secure: true)
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.GMAIL_USER,
-        pass: process.env.GMAIL_APP_PASSWORD
-      },
-      tls: {
-        rejectUnauthorized: false,
-        ciphers: 'SSLv3'
-      },
-      secure: false,
-      requireTLS: true,
-      port: 587
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
+      auth: { user, pass },
+      tls: { rejectUnauthorized: false }
     });
 
     console.log('✅ Transporter created successfully');
 
     // Verify connection
-    const verified = await transporter.verify();
+  const verified = await transporter.verify();
     console.log('✅ Connection verified:', verified);
 
     // Send test email
     const testResult = await transporter.sendMail({
-      from: process.env.GMAIL_USER,
-      to: process.env.GMAIL_USER, // Send to self for testing
+  from: user,
+  to: user, // Send to self for testing
       subject: 'Test Email - Gift Card System',
       html: `
         <h2>Test Email</h2>
@@ -51,6 +48,12 @@ async function testEmailConfig() {
     console.error('❌ Email test failed:');
     console.error('Error code:', error.code);
     console.error('Error message:', error.message);
+    if (String(error.message || '').includes('Username and Password not accepted')) {
+      console.error('\nSugerencias:');
+      console.error('- Asegúrate de usar una Contraseña de aplicación de 16 caracteres (no la contraseña normal).');
+      console.error('- Quita espacios: debe ser 16 caracteres continuos.');
+      console.error('- Verifica que GMAIL_USER coincida con la cuenta que generó la contraseña de app.');
+    }
     console.error('Full error:', error);
   }
 }

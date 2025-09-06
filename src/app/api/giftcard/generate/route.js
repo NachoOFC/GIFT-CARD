@@ -3,21 +3,23 @@ import QRCode from 'qrcode';
 import nodemailer from 'nodemailer';
 
 // Función para enviar email de comprobante con diseño profesional premium
-async function sendReceiptEmail({ to, purchaseData, transactionId, qrDataURL }) {
+async function sendReceiptEmail({ to, purchaseData, transactionId, qrDataURL, tempPassword }) {
   try {
+    // Sanitizar credenciales y usar configuración SMTP directa (más estable)
+    const smtpUser = (process.env.GMAIL_USER || '').trim();
+    const smtpPass = (process.env.GMAIL_APP_PASSWORD || '').trim().replace(/\s+/g, '');
+
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
       auth: {
-        user: process.env.GMAIL_USER,
-        pass: process.env.GMAIL_APP_PASSWORD
+        user: smtpUser,
+        pass: smtpPass
       },
       tls: {
-        rejectUnauthorized: false,
-        ciphers: 'SSLv3'
-      },
-      secure: false,
-      requireTLS: true,
-      port: 587
+        rejectUnauthorized: false
+      }
     });
 
     // Convertir data URL a buffer para attachment
@@ -36,7 +38,7 @@ async function sendReceiptEmail({ to, purchaseData, transactionId, qrDataURL }) 
           cid: 'qr-code'
         }
       ],
-      html: `
+  html: `
         <!DOCTYPE html>
         <html>
         <head>
@@ -285,10 +287,8 @@ async function sendReceiptEmail({ to, purchaseData, transactionId, qrDataURL }) 
             }
             
             .action-buttons {
-              display: flex;
-              gap: 15px;
-              justify-content: center;
-              margin-bottom: 20px;
+              text-align: center;
+              margin: 10px 0 10px 0;
             }
             
             .btn-primary {
@@ -329,6 +329,67 @@ async function sendReceiptEmail({ to, purchaseData, transactionId, qrDataURL }) 
               background: #f8fafc;
               border-color: #cbd5e1;
               transform: translateY(-1px);
+            }
+
+            /* Botón de imprimir mejorado */
+            .btn-print {
+              display: inline-block;
+              background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+              color: #ffffff !important;
+              text-decoration: none;
+              padding: 16px 28px;
+              border-radius: 14px;
+              font-weight: 700;
+              font-size: 15px;
+              letter-spacing: 0.2px;
+              box-shadow: 0 10px 25px rgba(34, 197, 94, 0.35);
+              border: none;
+              transition: transform 0.2s ease, box-shadow 0.2s ease;
+            }
+            .btn-print:hover {
+              transform: translateY(-2px);
+              box-shadow: 0 14px 30px rgba(34, 197, 94, 0.45);
+            }
+            .btn-print .btn-icon {
+              font-size: 18px;
+              margin-right: 8px;
+              display: inline-block;
+              vertical-align: middle;
+            }
+
+            .access-card {
+              margin-top: 16px;
+              text-align: left;
+              background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+              border: 1px solid #bbf7d0;
+              border-radius: 12px;
+              padding: 16px 18px;
+              color: #065f46;
+            }
+            .access-card h4 {
+              margin: 0 0 8px 0;
+              font-size: 15px;
+              font-weight: 700;
+              display: flex;
+              align-items: center;
+              gap: 8px;
+            }
+            .access-row {
+              display: grid;
+              grid-template-columns: 140px 1fr;
+              gap: 10px;
+              font-size: 14px;
+              margin-top: 6px;
+            }
+            .access-key {
+              font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+              background: white;
+              border: 1px dashed #86efac;
+              padding: 6px 10px;
+              border-radius: 8px;
+              color: #065f46;
+              font-weight: 700;
+              letter-spacing: 0.5px;
             }
             
             .btn-icon {
@@ -539,20 +600,33 @@ async function sendReceiptEmail({ to, purchaseData, transactionId, qrDataURL }) 
                   <!-- Actions Section -->
                   <div class="actions-section">
                     <div class="action-buttons">
-                      <a href="http://localhost:3000/receipt/${purchaseData.orderNumber}" 
-                         class="btn-primary"
-                         style="color: white; text-decoration: none;">
-                        <span class="btn-icon">📄</span>
-                        Ver Comprobante Completo
-                      </a>
-                      
                       <a href="http://localhost:3000/receipt/${purchaseData.orderNumber}?print=true" 
-                         class="btn-secondary"
-                         style="color: #475569; text-decoration: none;">
+                         class="btn-print"
+                         style="color: white; text-decoration: none;">
                         <span class="btn-icon">🖨️</span>
                         Imprimir Comprobante
                       </a>
                     </div>
+
+                    <!-- Access for Mobile App -->
+                    ${tempPassword ? `
+                    <div class="access-card">
+                      <h4>🔑 Acceso a la App Móvil</h4>
+                      <div class="access-row">
+                        <div>Usuario (Email)</div>
+                        <div><strong>${to}</strong></div>
+                      </div>
+                      <div class="access-row">
+                        <div>Contraseña temporal</div>
+                        <div class="access-key">${tempPassword}</div>
+                      </div>
+                      <div class="access-row" style="margin-top:8px;">
+                        <div>Iniciar sesión</div>
+                        <div><a href="http://localhost:3000/login" style="color:#2563eb; font-weight:600;">Abrir login</a></div>
+                      </div>
+                      <p style="margin-top:10px; font-size:12px; color:#047857;">Por seguridad, cámbiala en tu primer ingreso.</p>
+                    </div>
+                    ` : ''}
 
                     <!-- Security Note -->
                     <div class="security-note">
@@ -612,7 +686,7 @@ async function sendReceiptEmail({ to, purchaseData, transactionId, qrDataURL }) 
 
 export async function POST(request) {
   try {
-    const { order_id, monto, email_destinatario, customer_name } = await request.json();
+  const { order_id, monto, email_destinatario, customer_name, beneficiary_name } = await request.json();
 
     // Validar parámetros requeridos
     if (!order_id || !monto || !email_destinatario) {
@@ -675,8 +749,66 @@ export async function POST(request) {
       width: 256
     });
 
-    let emailSent = false;
-    let emailError = null;
+  let emailSent = false;
+  let emailError = null;
+
+    // Generar contraseña temporal y sincronizar con la tabla usuarios
+    const generateTempPassword = (len = 8) => {
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+      let out = '';
+      for (let i = 0; i < len; i++) out += chars[Math.floor(Math.random() * chars.length)];
+      return out;
+    };
+  let tempPassword = generateTempPassword(8);
+  const tempExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24h
+
+    try {
+      // Beneficiario: upsert por email
+      const [benRows] = await pool.query(
+        'SELECT id, temp_password FROM beneficiarios WHERE email = ? LIMIT 1',
+        [email_destinatario]
+      );
+      if (benRows.length > 0) {
+        // Reusar contraseña existente del beneficiario si está presente
+        if (benRows[0].temp_password) {
+          tempPassword = benRows[0].temp_password;
+        }
+        // No sobrescribimos la contraseña; solo actualizamos metadatos mínimos
+        await pool.query(
+          'UPDATE beneficiarios SET nombre = ?, estado = 1, order_id = ? WHERE id = ?',
+          [beneficiary_name || customer_name || 'Beneficiario', orderId, benRows[0].id]
+        );
+      } else {
+        await pool.query(
+          'INSERT INTO beneficiarios (nombre, email, temp_password, must_change_password, temp_password_expires, estado, order_id, created_at) VALUES (?, ?, ?, 1, ?, 1, ?, NOW())',
+          [beneficiary_name || customer_name || 'Beneficiario', email_destinatario, tempPassword, tempExpires, orderId]
+        );
+      }
+
+      // Usuario app (opcional, mantener compatibilidad actual): buscar si existe usuario por gmail o usuario
+      const [users] = await pool.query(
+        'SELECT id, password FROM usuarios WHERE gmail = ? OR usuario = ? LIMIT 1',
+        [email_destinatario, email_destinatario]
+      );
+      if (users.length > 0) {
+        // Reusar contraseña existente del usuario si existe
+        if (users[0].password) {
+          tempPassword = users[0].password;
+        }
+        // No sobrescribimos password; solo activamos el estado
+        await pool.query(
+          'UPDATE usuarios SET estado = 1 WHERE id = ?',
+          [users[0].id]
+        );
+      } else {
+        await pool.query(
+          'INSERT INTO usuarios (nombre, usuario, gmail, password, perfil, foto, estado, ultimo_login, fecha) VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())',
+          [customer_name || 'Cliente', email_destinatario, email_destinatario, tempPassword, 'user', '', 1]
+        );
+      }
+    } catch (e) {
+      console.error('⚠️ No se pudo sincronizar usuario/clave temporal:', e.message);
+    }
 
     // Intentar enviar email de comprobante
     try {
@@ -689,7 +821,8 @@ export async function POST(request) {
           customerName: customer_name || 'Cliente'
         },
         transactionId: order_id,
-        qrDataURL: qrCodeDataURL
+        qrDataURL: qrCodeDataURL,
+        tempPassword
       });
       
       emailSent = emailResult.success;
@@ -713,12 +846,14 @@ export async function POST(request) {
         fecha_compra: new Date().toISOString().split('T')[0],
         estado: 'PAGADO',
         email_destinatario: email_destinatario,
-        customer_name: customer_name || 'Cliente',
+  customer_name: customer_name || 'Cliente',
+  beneficiary_name: beneficiary_name || customer_name || 'Beneficiario',
         qr_code: qrCodeDataURL,
         receipt_url: `/receipt/${order_id}`,
         email_enviado: emailSent,
         email_error: emailError,
-        order_id: orderId
+  order_id: orderId,
+  temp_password: tempPassword
       },
       message: emailSent 
         ? 'Compra procesada y comprobante enviado exitosamente'
