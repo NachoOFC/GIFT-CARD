@@ -240,7 +240,7 @@ function PaymentSuccessContent() {
       <header className="relative z-10 bg-white/80 backdrop-blur-md border-b border-gray-100 sticky top-0">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <button
-            onClick={() => window.location.href = '/'}
+            onClick={() => window.location.href = '/home'}
             className="flex items-center text-gray-700 hover:text-blue-600 transition-colors font-medium"
           >
             <ArrowLeft className="w-5 h-5 mr-2" />
