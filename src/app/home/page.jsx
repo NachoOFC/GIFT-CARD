@@ -160,6 +160,12 @@ export default function HomePage() {
                 Gestionar Gift Cards
               </a>
               <a
+                href="/admin/Parametros"
+                className="hidden md:inline-block bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600"
+              >
+                ⚙️ Parámetros
+              </a>
+              <a
                 href="/admin/orders"
                 className="hidden md:inline-block bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600"
               >
