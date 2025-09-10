@@ -1,5 +1,11 @@
 'use client'
 
+/**
+ * Carrito de compra para Gift Cards
+ * @author Alejandro
+ * @date 10 de septiembre de 2025
+ */
+
 import { useCart } from '@/contexts/CartContext'
 import { useState } from 'react'
 
