@@ -318,8 +318,6 @@ export async function POST(request) {
 
           console.log(`✅ COMPRADOR ${buyerUserId}: solo historial de compra por $${monto}`);
         }
-          console.log(`📝 Comprador y beneficiario son la misma persona`);
-        }
 
       } else {
         console.log('⚠️ No se pudo encontrar usuario beneficiario para crear gift card');
