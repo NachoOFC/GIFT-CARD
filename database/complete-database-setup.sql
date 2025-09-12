@@ -1,0 +1,208 @@
+-- ===================================================================
+-- CONFIGURACIÓN COMPLETA DE BASE DE DATOS - GIFT CARD SYSTEM
+-- ===================================================================
+-- Este archivo contiene la estructura completa de la base de datos
+-- para que todos los compañeros tengan exactamente la misma configuración
+-- 
+-- Instrucciones:
+-- 1. Abrir HeidiSQL, phpMyAdmin o tu cliente MySQL/MariaDB favorito
+-- 2. Ejecutar este script completo
+-- 3. Configurar las variables de entorno en .env.local
+-- ===================================================================
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET NAMES utf8 */;
+/*!50503 SET NAMES utf8mb4 */;
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+/*!40103 SET TIME_ZONE='+00:00' */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+
+-- ===================================================================
+-- 1. CREAR BASE DE DATOS
+-- ===================================================================
+CREATE DATABASE IF NOT EXISTS `gift-card` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_uca1400_ai_ci */;
+USE `gift-card`;
+
+-- ===================================================================
+-- 2. TABLA: orders (debe crearse PRIMERO por las foreign keys)
+-- ===================================================================
+CREATE TABLE IF NOT EXISTS `orders` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `numero_orden` varchar(50) NOT NULL,
+  `empresa` varchar(100) DEFAULT NULL,
+  `email_comprador` varchar(255) NOT NULL,
+  `nombre_comprador` varchar(255) DEFAULT NULL,
+  `total` int(11) NOT NULL,
+  `estado` enum('pendiente','pagado','cancelado') DEFAULT 'pendiente',
+  `metodo_pago` varchar(50) NOT NULL DEFAULT 'corporate',
+  `fecha_orden` timestamp NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `numero_orden` (`numero_orden`)
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+
+-- ===================================================================
+-- 3. TABLA: gift_cards
+-- ===================================================================
+CREATE TABLE IF NOT EXISTS `gift_cards` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `codigo` varchar(50) NOT NULL,
+  `valor_inicial` int(11) NOT NULL,
+  `saldo_actual` int(11) NOT NULL,
+  `activa` tinyint(1) DEFAULT 1,
+  `fecha_creacion` timestamp NULL DEFAULT current_timestamp(),
+  `fecha_expiracion` date DEFAULT NULL,
+  `email_destinatario` varchar(255) DEFAULT NULL,
+  `empresa` varchar(255) DEFAULT NULL,
+  `mensaje` text DEFAULT NULL,
+  `order_id` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `codigo` (`codigo`),
+  KEY `gift_cards_order_fk` (`order_id`),
+  CONSTRAINT `gift_cards_order_fk` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+
+-- ===================================================================
+-- 4. TABLA: usuarios (para el sistema de login)
+-- ===================================================================
+CREATE TABLE IF NOT EXISTS `usuarios` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(255) NOT NULL,
+  `usuario` varchar(100) NOT NULL,
+  `gmail` varchar(255) DEFAULT NULL,
+  `password` varchar(255) NOT NULL,
+  `perfil` enum('admin','user') DEFAULT 'user',
+  `estado` tinyint(1) DEFAULT 1,
+  `fecha_creacion` timestamp NULL DEFAULT current_timestamp(),
+  `ultimo_login` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `usuario` (`usuario`),
+  UNIQUE KEY `gmail` (`gmail`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+
+-- ===================================================================
+-- 5. TABLA: beneficiarios (para gestión de usuarios corporativos)
+-- ===================================================================
+CREATE TABLE IF NOT EXISTS `beneficiarios` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `nombre` VARCHAR(255) NOT NULL,
+  `email` VARCHAR(255) NOT NULL,
+  `temp_password` VARCHAR(64) NOT NULL,
+  `must_change_password` TINYINT(1) NOT NULL DEFAULT 1,
+  `temp_password_expires` DATETIME NULL,
+  `estado` TINYINT(1) NOT NULL DEFAULT 1,
+  `order_id` INT NULL,
+  `created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `beneficiarios_email_uq` (`email`),
+  KEY `beneficiarios_order_fk` (`order_id`),
+  CONSTRAINT `beneficiarios_order_fk` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+
+-- ===================================================================
+-- 6. TABLA: parametros (para configuración del sistema)
+-- ===================================================================
+CREATE TABLE IF NOT EXISTS `parametros` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `clave` varchar(100) NOT NULL,
+  `valor` text NOT NULL,
+  `descripcion` text DEFAULT NULL,
+  `tipo` enum('string','number','boolean','json') DEFAULT 'string',
+  `fecha_creacion` timestamp NULL DEFAULT current_timestamp(),
+  `fecha_actualizacion` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `clave` (`clave`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+
+-- ===================================================================
+-- 7. DATOS DE EJEMPLO - ORDERS
+-- ===================================================================
+DELETE FROM `orders`;
+INSERT INTO `orders` (`id`, `numero_orden`, `empresa`, `email_comprador`, `nombre_comprador`, `total`, `estado`, `metodo_pago`, `fecha_orden`) VALUES
+	(1, 'ORDER_001', NULL, 'cliente@web.com', NULL, 6, 'pendiente', 'corporate', '2025-08-22 23:08:27'),
+	(2, 'ORDER_002', NULL, 'cliente@web.com', NULL, 100, 'pagado', 'corporate', '2025-08-23 14:11:00'),
+	(3, 'PAN-20250827-HH65U', 'Panichini', '', NULL, 65000, 'pendiente', 'corporate', '2025-08-27 15:56:54'),
+	(4, 'PAN-20250827-GS680', 'Panichini', '', NULL, 15000, 'pendiente', 'corporate', '2025-08-27 16:28:40'),
+	(5, 'PAN-20250827-1XWJB', 'Panichini', '', NULL, 15000, 'pendiente', 'corporate', '2025-08-27 16:28:46'),
+	(6, 'PAN-20250827-6ER45', 'Panichini', '', NULL, 15000, 'pendiente', 'corporate', '2025-08-27 16:28:48'),
+	(7, 'PAN-20250827-82R07', 'Panichini', '', NULL, 15000, 'pendiente', 'corporate', '2025-08-27 16:28:48'),
+	(8, 'PAN-20250827-AXV06', 'Panichini', '', NULL, 15000, 'pendiente', 'corporate', '2025-08-27 16:28:48'),
+	(9, 'PAN-20250827-97EMG', 'Panichini', '', NULL, 15000, 'pendiente', 'corporate', '2025-08-27 16:28:49'),
+	(10, 'PAN-20250827-X10EE', 'Panichini', '', NULL, 15000, 'pendiente', 'corporate', '2025-08-27 16:28:49'),
+	(11, 'PAN-20250827-J7RSF', 'Panichini', '', NULL, 15000, 'pendiente', 'corporate', '2025-08-27 16:31:03'),
+	(12, 'PAN-20250827-PTCC8', 'Panichini', '', NULL, 15000, 'pendiente', 'corporate', '2025-08-27 20:20:27');
+
+-- ===================================================================
+-- 8. DATOS DE EJEMPLO - GIFT_CARDS
+-- ===================================================================
+DELETE FROM `gift_cards`;
+INSERT INTO `gift_cards` (`id`, `codigo`, `valor_inicial`, `saldo_actual`, `activa`, `fecha_creacion`, `fecha_expiracion`, `email_destinatario`, `empresa`, `mensaje`, `order_id`) VALUES
+	(1, 'NODE-TEST-1', 5, 5, 1, '2025-08-21 19:15:38', '2026-08-16', 'a@b.com', NULL, NULL, NULL),
+	(2, 'CODE-123', 100, 100, 1, '2025-08-21 19:27:35', '2025-08-22', 'nacho@gmail.com', NULL, NULL, NULL),
+	(3, 'TEST-5000', 5000, 5000, 1, '2025-08-24 02:39:16', '2025-12-31', 'test@example.com', NULL, NULL, NULL),
+	(4, 'PAN-0001', 20000, 20000, 1, '2025-08-27 15:56:54', '2025-12-31', 'ana@empresa.cl', 'Panichini', 'Beneficio corporativo', 3),
+	(5, 'PAN-20250827-HH65U-0002', 15000, 15000, 1, '2025-08-27 15:56:54', '2025-11-30', 'carlos@empresa.cl', 'Panichini', 'Campaña primavera', 3),
+	(6, 'PAN-0003', 30000, 30000, 1, '2025-08-27 15:56:54', '2026-01-15', NULL, 'Panichini', 'Sin email', 3),
+	(7, 'PAN-20250827-GS680-0002', 15000, 15000, 1, '2025-08-27 16:28:40', '2025-11-30', 'carlos@empresa.cl', 'Panichini', 'Campaña primavera', 4),
+	(8, 'PAN-20250827-1XWJB-0002', 15000, 15000, 1, '2025-08-27 16:28:46', '2025-11-30', 'carlos@empresa.cl', 'Panichini', 'Campaña primavera', 5),
+	(9, 'PAN-20250827-6ER45-0002', 15000, 15000, 1, '2025-08-27 16:28:48', '2025-11-30', 'carlos@empresa.cl', 'Panichini', 'Campaña primavera', 6),
+	(10, 'PAN-20250827-82R07-0002', 15000, 15000, 1, '2025-08-27 16:28:48', '2025-11-30', 'carlos@empresa.cl', 'Panichini', 'Campaña primavera', 7),
+	(11, 'PAN-20250827-AXV06-0002', 15000, 15000, 1, '2025-08-27 16:28:48', '2025-11-30', 'carlos@empresa.cl', 'Panichini', 'Campaña primavera', 8),
+	(12, 'PAN-20250827-97EMG-0002', 15000, 15000, 1, '2025-08-27 16:28:49', '2025-11-30', 'carlos@empresa.cl', 'Panichini', 'Campaña primavera', 9),
+	(13, 'PAN-20250827-X10EE-0002', 15000, 15000, 1, '2025-08-27 16:28:49', '2025-11-30', 'carlos@empresa.cl', 'Panichini', 'Campaña primavera', 10),
+	(14, 'PAN-20250827-J7RSF-0002', 15000, 15000, 1, '2025-08-27 16:31:03', '2025-11-30', 'carlos@empresa.cl', 'Panichini', 'Campaña primavera', 11),
+	(15, 'PAN-20250827-PTCC8-0002', 15000, 15000, 1, '2025-08-27 20:20:27', '2025-11-30', 'carlos@empresa.cl', 'Panichini', 'Campaña primavera', 12);
+
+-- ===================================================================
+-- 9. DATOS DE EJEMPLO - USUARIOS (para poder hacer login)
+-- ===================================================================
+DELETE FROM `usuarios`;
+INSERT INTO `usuarios` (`id`, `nombre`, `usuario`, `gmail`, `password`, `perfil`, `estado`, `fecha_creacion`) VALUES
+	(1, 'Administrador', 'admin', 'admin@giftcard.com', '123456', 'admin', 1, NOW()),
+	(2, 'Usuario Demo', 'demo', 'demo@giftcard.com', 'demo123', 'user', 1, NOW()),
+	(3, 'Nacho Admin', 'nacho', 'nacho@gmail.com', '123456', 'admin', 1, NOW());
+
+-- ===================================================================
+-- 10. DATOS DE EJEMPLO - PARAMETROS DEL SISTEMA
+-- ===================================================================
+DELETE FROM `parametros`;
+INSERT INTO `parametros` (`clave`, `valor`, `descripcion`, `tipo`) VALUES
+	('app_name', 'Gift Card System', 'Nombre de la aplicación', 'string'),
+	('app_version', '1.0.0', 'Versión actual del sistema', 'string'),
+	('email_enabled', 'true', 'Habilitar envío de emails', 'boolean'),
+	('webpay_enabled', 'false', 'Habilitar pagos con WebPay', 'boolean'),
+	('max_gift_card_value', '100000', 'Valor máximo de gift card', 'number'),
+	('default_expiration_days', '365', 'Días por defecto hasta expiración', 'number');
+
+-- ===================================================================
+-- RESTAURAR CONFIGURACIONES ORIGINALES
+-- ===================================================================
+/*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;
+/*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
+/*!40014 SET FOREIGN_KEY_CHECKS=IFNULL(@OLD_FOREIGN_KEY_CHECKS, 1) */;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40111 SET SQL_NOTES=IFNULL(@OLD_SQL_NOTES, 1) */;
+
+-- ===================================================================
+-- ✅ BASE DE DATOS LISTA PARA USAR
+-- ===================================================================
+-- 
+-- CREDENCIALES DE PRUEBA:
+-- -----------------------
+-- Usuario: admin | Contraseña: 123456 (perfil admin)
+-- Usuario: demo  | Contraseña: demo123 (perfil user)
+-- Usuario: nacho | Contraseña: 123456 (perfil admin)
+--
+-- CONFIGURACIÓN .env.local RECOMENDADA:
+-- ------------------------------------
+-- DB_HOST=127.0.0.1
+-- DB_PORT=3306
+-- DB_USER=root
+-- DB_PASSWORD=
+-- DB_NAME=gift-card
+--
+-- GMAIL_USER=tu_email@gmail.com
+-- GMAIL_APP_PASSWORD=tu_contraseña_de_aplicacion
+--
+-- ===================================================================

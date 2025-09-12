@@ -19,7 +19,10 @@ export default function HomePage() {
     { id: "shopping", name: "Compras", icon: "🛍️", count: 0 },
     { id: "entertainment", name: "Entretenimiento", icon: "🎬", count: 0 },
     { id: "travel", name: "Viajes", icon: "✈️", count: 0 },
+    { id: "services", name: "Servicios", icon: "🔧", count: 0 },
     { id: "technology", name: "Tecnología", icon: "💻", count: 0 },
+    { id: "health", name: "Salud", icon: "🏥", count: 0 },
+    { id: "education", name: "Educación", icon: "📚", count: 0 },
   ];
 
   useEffect(() => {
@@ -119,19 +122,13 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* Header Sofisticado */}
       <header className="bg-gradient-to-r from-slate-50 to-blue-50 shadow-lg border-b border-slate-200/60 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Brand & User Controls Bar */}
+          {/* Brand Bar */}
           <div className="flex items-center justify-between py-3 border-b border-slate-200/40">
-            <div className="flex items-center space-x-4">
-              {/* Logo MLine */}
-              <div className="flex-shrink-0">
-                <img 
-                  src="/logo/mline.jpg" 
-                  alt="MLine Logo" 
-                  className="h-10 w-auto object-contain"
-                />
+            <div className="flex items-center space-x-3">
+              <div className="h-8 w-8 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-lg flex items-center justify-center shadow-sm">
+                <span className="text-white font-bold text-sm">GC</span>
               </div>
               <div>
                 <h1 className="text-lg font-bold text-slate-800">Gift Card System</h1>
@@ -155,7 +152,7 @@ export default function HomePage() {
                 className="hidden md:flex items-center space-x-2 px-3 py-2 rounded-lg bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/50 transition-all duration-200 group"
               >
                 <div className="h-6 w-6 bg-gradient-to-br from-emerald-500 to-green-600 rounded-full flex items-center justify-center">
-                  <span className="text-white text-xs">💰</span>
+                  <span className="text-white text-xs">�</span>
                 </div>
                 <span className="text-emerald-700 font-medium text-sm group-hover:text-emerald-800">Consultar Saldo</span>
               </a>
@@ -189,58 +186,32 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Search Section */}
-          <div className="flex items-center justify-between gap-6 py-4">
-            {/* Search Bar */}
-            <div className="flex-1 max-w-2xl">
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="¿Qué deseas buscar?"
-                  className="w-full pl-4 pr-12 py-3 border border-slate-200/60 rounded-xl bg-white/70 backdrop-blur-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-300 focus:bg-white transition-all duration-200 shadow-sm placeholder-slate-400"
+            {/* Logo & Search Section */}
+            <div className="flex items-center justify-between gap-6 py-3">
+              {/* Logo */}
+              <div className="flex-shrink-0">
+                <img 
+                  src="/logo/mline.jpg" 
+                  alt="MLine Logo" 
+                  className="h-16 w-auto object-contain"
                 />
-                <button className="absolute right-3 top-1/2 transform -translate-y-1/2 p-2 text-slate-400 hover:text-blue-600 transition-colors duration-200">
-                  <span className="text-lg">🔍</span>
-                </button>
+              </div>
+
+              {/* Search Bar */}
+              <div className="flex-1 max-w-2xl">
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="¿Qué deseas buscar?"
+                    className="w-full pl-4 pr-12 py-3 border border-slate-200/60 rounded-xl bg-white/70 backdrop-blur-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-300 focus:bg-white transition-all duration-200 shadow-sm placeholder-slate-400"
+                  />
+                  <button className="absolute right-3 top-1/2 transform -translate-y-1/2 p-2 text-slate-400 hover:text-blue-600 transition-colors duration-200">
+                    <span className="text-lg">🔍</span>
+                  </button>
+                </div>
               </div>
             </div>
-
-            {/* Admin Actions - Desktop */}
-            <div className="hidden xl:flex items-center space-x-3">
-              <a
-                href="/gift-cards"
-                className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 border border-slate-300 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md font-medium text-sm flex items-center space-x-2"
-              >
-                <span className="h-5 w-5 bg-slate-200 rounded flex items-center justify-center">
-                  <span className="text-xs">🎁</span>
-                </span>
-                <span>Gift Cards</span>
-              </a>
-              
-              <a
-                href="/admin/Parametros"
-                className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 border border-slate-300 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md font-medium text-sm flex items-center space-x-2"
-              >
-                <span className="h-5 w-5 bg-slate-200 rounded flex items-center justify-center">
-                  <span className="text-xs">⚙️</span>
-                </span>
-                <span>Parámetros</span>
-              </a>
-              
-              <a
-                href="/admin/orders"
-                className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 border border-slate-300 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md font-medium text-sm flex items-center space-x-2"
-              >
-                <span className="h-5 w-5 bg-slate-200 rounded flex items-center justify-center">
-                  <span className="text-xs">📊</span>
-                </span>
-                <span>Admin</span>
-              </a>
-            </div>
-          </div>
-
-          {/* Tab Navigation */}
-          <div className="flex justify-between items-center py-3 border-t border-slate-200/40">
+            {/* Tab Navigation */}
             <nav className="flex items-center">
               <div className="flex bg-white/60 backdrop-blur-sm rounded-xl p-1 shadow-sm border border-slate-200/50">
                 <button
@@ -276,27 +247,98 @@ export default function HomePage() {
               </div>
             </nav>
 
-            {/* Mobile Menu Button */}
-            <div className="xl:hidden">
-              <button className="p-2 rounded-lg bg-white/60 backdrop-blur-sm border border-slate-200/50 text-slate-600 hover:text-slate-800 hover:bg-white/80 transition-all duration-200">
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              </button>
+            {/* Admin Actions */}
+            <div className="hidden lg:flex items-center space-x-3">
+              <a
+                href="/gift-cards"
+                className="px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-md hover:shadow-lg font-medium text-sm flex items-center space-x-2 group"
+              >
+                <span className="h-5 w-5 bg-white/20 rounded flex items-center justify-center">
+                  <span className="text-xs">🎁</span>
+                </span>
+                <span>Gestionar Gift Cards</span>
+              </a>
+              
+              <a
+                href="/admin/Parametros"
+                className="px-4 py-2.5 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg hover:from-purple-700 hover:to-purple-800 transition-all duration-200 shadow-md hover:shadow-lg font-medium text-sm flex items-center space-x-2"
+              >
+                <span className="h-5 w-5 bg-white/20 rounded flex items-center justify-center">
+                  <span className="text-xs">⚙️</span>
+                </span>
+                <span>Parámetros</span>
+              </a>
+              
+              <a
+                href="/admin/orders"
+                className="px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white rounded-lg hover:from-emerald-700 hover:to-emerald-800 transition-all duration-200 shadow-md hover:shadow-lg font-medium text-sm flex items-center space-x-2"
+              >
+                <span className="h-5 w-5 bg-white/20 rounded flex items-center justify-center">
+                  <span className="text-xs">�</span>
+                </span>
+                <span>Panel Admin</span>
+              </a>
+            </div>
+
+            {/* Tab Navigation */}
+            <div className="flex justify-between items-center py-3 border-t border-slate-200/40">
+              <nav className="flex items-center">
+                <div className="flex bg-white/60 backdrop-blur-sm rounded-xl p-1 shadow-sm border border-slate-200/50">
+                  <button
+                    onClick={() => setActiveTab("personas")}
+                    className={`px-6 py-3 rounded-lg flex items-center space-x-3 transition-all duration-300 font-medium ${
+                      activeTab === "personas"
+                        ? "bg-white text-blue-700 shadow-md ring-1 ring-blue-100 transform scale-105"
+                        : "text-slate-600 hover:text-slate-800 hover:bg-white/50"
+                    }`}
+                  >
+                    <div className={`h-8 w-8 rounded-lg flex items-center justify-center transition-colors ${
+                      activeTab === "personas" ? "bg-blue-100" : "bg-slate-100"
+                    }`}>
+                      <span className="text-lg">👥</span>
+                    </div>
+                    <span className="text-sm">Personas</span>
+                  </button>
+                  <button
+                    onClick={() => window.location.href = '/empresas'}
+                    className={`px-6 py-3 rounded-lg flex items-center space-x-3 transition-all duration-300 font-medium ${
+                      activeTab === "empresas"
+                        ? "bg-white text-blue-700 shadow-md ring-1 ring-blue-100 transform scale-105"
+                        : "text-slate-600 hover:text-slate-800 hover:bg-white/50"
+                    }`}
+                  >
+                    <div className={`h-8 w-8 rounded-lg flex items-center justify-center transition-colors ${
+                      activeTab === "empresas" ? "bg-blue-100" : "bg-slate-100"
+                    }`}>
+                      <span className="text-lg">🏢</span>
+                    </div>
+                    <span className="text-sm">Empresas</span>
+                  </button>
+                </div>
+              </nav>
+
+              {/* Mobile Menu Button */}
+              <div className="xl:hidden">
+                <button className="p-2 rounded-lg bg-white/60 backdrop-blur-sm border border-slate-200/50 text-slate-600 hover:text-slate-800 hover:bg-white/80 transition-all duration-200">
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Categories Bar */}
+
       <div className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-wrap gap-2 py-4">
+          <div className="flex space-x-1 py-4 overflow-x-auto">
             {categories.map((category) => (
               <button
                 key={category.id}
                 onClick={() => setSelectedCategory(category.id)}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg whitespace-nowrap transition-colors ${
                   selectedCategory === category.id
                     ? "bg-blue-100 text-blue-700"
                     : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
@@ -310,7 +352,6 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex gap-8">
           <aside className="w-64 flex-shrink-0">

@@ -5,8 +5,8 @@ export async function POST(request) {
     const body = await request.json();
     
     // Esperamos recibir los campos con nombres compatibles con la tabla `usuarios`:
-    // { nombre, usuario, gmail, password, perfil?, foto?, estado? }
-    const { nombre, usuario, gmail, password, perfil, foto, estado } = body;
+    // { nombre, usuario, password, perfil?, estado? }
+    const { nombre, usuario, password, perfil, estado } = body;
     
     if (!usuario || !password) {
       return Response.json(
@@ -18,9 +18,7 @@ export async function POST(request) {
     // Valores por defecto si no se envían
     const nombreToInsert = nombre && String(nombre).trim() !== '' ? String(nombre).trim() : (String(usuario).split('@')[0] || '');
     const perfilToInsert = perfil && String(perfil).trim() !== '' ? String(perfil).trim() : 'user';
-    const fotoToInsert = foto && String(foto).trim() !== '' ? String(foto).trim() : '';
     const estadoToInsert = typeof estado !== 'undefined' && estado !== null ? estado : 1; // 1 = activo
-    const gmailToInsert = gmail && String(gmail).trim() !== '' ? String(gmail).trim() : null;
 
     const connection = await pool.getConnection();
     try {
@@ -37,10 +35,10 @@ export async function POST(request) {
       }
 
       // Insertar nuevo usuario en la tabla `usuarios`.
-      // Columnas: id, nombre, usuario, gmail, password, perfil, foto, estado, ultimo_login, fecha
+      // Columnas: id, nombre, usuario, password, perfil, estado, ultimo_login, fecha_creacion
       const [result] = await connection.execute(
-        'INSERT INTO usuarios (nombre, usuario, gmail, password, perfil, foto, estado, ultimo_login, fecha) VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())',
-        [nombreToInsert, usuario, gmailToInsert, password, perfilToInsert, fotoToInsert, estadoToInsert]
+        'INSERT INTO usuarios (nombre, usuario, password, perfil, estado, ultimo_login, fecha_creacion) VALUES (?, ?, ?, ?, ?, NOW(), NOW())',
+        [nombreToInsert, usuario, password, perfilToInsert, estadoToInsert]
       );
 
       await connection.commit();

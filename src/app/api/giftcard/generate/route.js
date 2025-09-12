@@ -64,7 +64,7 @@ async function sendReceiptEmail({ to, purchaseData, transactionId, qrDataURL, te
 
 export async function POST(request) {
   try {
-  const { order_id, monto, email_destinatario, customer_name, beneficiary_name } = await request.json();
+  const { order_id, monto, email_destinatario, customer_name, beneficiary_name, email_comprador } = await request.json();
 
     // Validar parámetros requeridos
     if (!order_id || !monto || !email_destinatario) {
@@ -73,6 +73,9 @@ export async function POST(request) {
         error: 'Parámetros requeridos: order_id, monto, email_destinatario'
       }, { status: 400 });
     }
+
+    // Si no se especifica email_comprador, asumimos que el destinatario es quien compra
+    const emailComprador = email_comprador || email_destinatario;
     
     // Crear la orden en la tabla orders con la estructura actual
     const [orderResult] = await pool.execute(`
@@ -87,7 +90,7 @@ export async function POST(request) {
       ) VALUES (?, ?, ?, ?, ?, ?, NOW())
     `, [
       order_id,
-      email_destinatario,
+      emailComprador, // Email del comprador
       customer_name || 'Cliente',
       monto,
       'pagado', // marcamos como pagado inmediatamente
@@ -163,29 +166,166 @@ export async function POST(request) {
         );
       }
 
-      // Usuario app (opcional, mantener compatibilidad actual): buscar si existe usuario por gmail o usuario
-      const [users] = await pool.query(
+      // ✅ CREAR USUARIO AUTOMÁTICAMENTE cuando se crea beneficiario
+      const [existingUsers] = await pool.query(
         'SELECT id, password FROM usuarios WHERE gmail = ? OR usuario = ? LIMIT 1',
         [email_destinatario, email_destinatario]
       );
-      if (users.length > 0) {
-        // Reusar contraseña existente del usuario si existe
-        if (users[0].password) {
-          tempPassword = users[0].password;
+
+      if (existingUsers.length === 0) {
+        // Crear nuevo usuario automáticamente con la misma contraseña temporal
+        const userName = email_destinatario.split('@')[0]; // Usar parte antes del @ como usuario
+        const fullName = beneficiary_name || customer_name || 'Usuario Beneficiario';
+        
+        console.log(`🆕 Creando usuario automático para beneficiario: ${email_destinatario}`);
+        
+        await pool.query(
+          `INSERT INTO usuarios (nombre, usuario, gmail, password, perfil, estado, fecha_creacion, fecha_registro) 
+           VALUES (?, ?, ?, ?, 'user', 1, NOW(), NOW())`,
+          [fullName, userName, email_destinatario, tempPassword]
+        );
+        
+        console.log(`✅ Usuario creado: ${userName} con contraseña temporal`);
+      } else {
+        // Si ya existe usuario, reusar contraseña si es necesario
+        console.log(`📝 Usuario existente encontrado para: ${email_destinatario}`);
+        if (existingUsers[0].password) {
+          tempPassword = existingUsers[0].password;
         }
-        // No sobrescribimos password; solo activamos el estado
+        // Activar el usuario si no está activo
         await pool.query(
           'UPDATE usuarios SET estado = 1 WHERE id = ?',
-          [users[0].id]
-        );
-      } else {
-        await pool.query(
-          'INSERT INTO usuarios (nombre, usuario, gmail, password, perfil, foto, estado, ultimo_login, fecha) VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())',
-          [customer_name || 'Cliente', email_destinatario, email_destinatario, tempPassword, 'user', '', 1]
+          [existingUsers[0].id]
         );
       }
     } catch (e) {
       console.error('⚠️ No se pudo sincronizar usuario/clave temporal:', e.message);
+    }
+
+    // ✅ CREAR USUARIO DEL COMPRADOR (si es diferente al beneficiario)
+    try {
+      if (emailComprador !== email_destinatario) {
+        console.log(`👤 Procesando usuario comprador: ${emailComprador}`);
+        const [existingBuyer] = await pool.query(
+          'SELECT id FROM usuarios WHERE gmail = ? OR usuario = ? LIMIT 1',
+          [emailComprador, emailComprador]
+        );
+
+        if (existingBuyer.length === 0) {
+          // Crear usuario comprador
+          const buyerUserName = emailComprador.split('@')[0];
+          const buyerFullName = customer_name || 'Comprador';
+          
+          console.log(`🆕 Creando usuario comprador: ${emailComprador}`);
+          
+          await pool.query(
+            `INSERT INTO usuarios (nombre, usuario, gmail, password, perfil, estado, fecha_creacion, fecha_registro) 
+             VALUES (?, ?, ?, ?, 'user', 1, NOW(), NOW())`,
+            [buyerFullName, buyerUserName, emailComprador, tempPassword]
+          );
+          
+          console.log(`✅ Usuario comprador creado: ${buyerUserName}`);
+        } else {
+          console.log(`📝 Usuario comprador existente: ${emailComprador}`);
+          // Activar el usuario si no está activo
+          await pool.query(
+            'UPDATE usuarios SET estado = 1 WHERE id = ?',
+            [existingBuyer[0].id]
+          );
+        }
+      }
+    } catch (e) {
+      console.error('⚠️ Error creando usuario comprador:', e.message);
+    }
+
+    // ✅ CREAR GIFT CARDS Y RELACIONES CON USUARIOS
+    try {
+      // Obtener usuarios beneficiario y comprador
+      const [beneficiaryUser] = await pool.query(
+        'SELECT id FROM usuarios WHERE gmail = ? LIMIT 1',
+        [email_destinatario]
+      );
+
+      const [buyerUser] = await pool.query(
+        'SELECT id FROM usuarios WHERE gmail = ? LIMIT 1', 
+        [emailComprador]
+      );
+
+      if (beneficiaryUser.length > 0) {
+        const beneficiaryUserId = beneficiaryUser[0].id;
+        const buyerUserId = buyerUser.length > 0 ? buyerUser[0].id : beneficiaryUserId;
+
+        // Crear gift card individual
+        const giftCardCode = `GC-${order_id}-${Date.now().toString().slice(-4)}`;
+        const expirationDate = new Date();
+        expirationDate.setFullYear(expirationDate.getFullYear() + 1); // 1 año de expiración
+
+        await pool.query(`
+          INSERT INTO gift_cards (codigo, valor_inicial, saldo_actual, activa, fecha_expiracion, email_destinatario, empresa, mensaje, order_id)
+          VALUES (?, ?, ?, 1, ?, ?, ?, ?, ?)
+        `, [
+          giftCardCode,
+          monto,
+          monto,
+          expirationDate.toISOString().split('T')[0],
+          email_destinatario,
+          'MLine',
+          `Gift Card por compra #${order_id}`,
+          orderId
+        ]);
+
+        console.log(`✅ Gift card creada: ${giftCardCode} por $${monto}`);
+
+        // Si comprador = beneficiario: crear UNA relación con ambos roles
+        if (buyerUserId === beneficiaryUserId) {
+          await pool.query(`
+            INSERT INTO user_orders (user_id, order_id, gift_card_codes, total_amount, purchase_date, status, tipo)
+            VALUES (?, ?, ?, ?, NOW(), 'active', 'comprador_beneficiario')
+          `, [
+            beneficiaryUserId,
+            orderId,
+            giftCardCode,
+            monto
+          ]);
+
+          console.log(`✅ Relación user_orders creada: COMPRADOR=BENEFICIARIO ${beneficiaryUserId}`);
+        } else {
+          // Si son diferentes: beneficiario tiene gift card, comprador solo historial
+          
+          // BENEFICIARIO: tiene la gift card para usar
+          await pool.query(`
+            INSERT INTO user_orders (user_id, order_id, gift_card_codes, total_amount, purchase_date, status, tipo)
+            VALUES (?, ?, ?, ?, NOW(), 'active', 'beneficiario')
+          `, [
+            beneficiaryUserId,
+            orderId,
+            giftCardCode,
+            monto
+          ]);
+
+          console.log(`✅ BENEFICIARIO ${beneficiaryUserId}: tiene gift card ${giftCardCode}`);
+
+          // COMPRADOR: solo historial de compra (sin gift_card_codes)
+          await pool.query(`
+            INSERT INTO user_orders (user_id, order_id, gift_card_codes, total_amount, purchase_date, status, tipo)
+            VALUES (?, ?, ?, ?, NOW(), 'active', 'comprador')
+          `, [
+            buyerUserId,
+            orderId,
+            null, // No tiene acceso a la gift card
+            monto
+          ]);
+
+          console.log(`✅ COMPRADOR ${buyerUserId}: solo historial de compra por $${monto}`);
+        }
+          console.log(`📝 Comprador y beneficiario son la misma persona`);
+        }
+
+      } else {
+        console.log('⚠️ No se pudo encontrar usuario beneficiario para crear gift card');
+      }
+    } catch (e) {
+      console.error('⚠️ Error creando gift card o relaciones user_orders:', e.message);
     }
 
     // Intentar enviar email de comprobante
