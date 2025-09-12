@@ -1,4 +1,4 @@
-import pool from '../../../../utils/db.ts';
+import pool from '@/utils/db';
 
 export async function GET(request, { params }) {
   try {

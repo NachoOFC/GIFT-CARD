@@ -1,4 +1,4 @@
-import pool from '../../../../utils/db.ts';
+import pool from '@/utils/db';
 import QRCode from 'qrcode';
 import nodemailer from 'nodemailer';
 
@@ -7,7 +7,7 @@ async function sendReceiptEmail({ to, purchaseData, transactionId, qrDataURL, te
   try {
     // Importar la plantilla de email desde el archivo separado
     // Nota: importamos de forma dinámica para evitar problemas con Next.js y para mantener la compatibilidad
-    const receiptEmailTemplateModule = await import('../../../../templates/emails/receipt');
+    const receiptEmailTemplateModule = await import('@/templates/emails/receipt');
     const receiptEmailTemplate = receiptEmailTemplateModule.default || receiptEmailTemplateModule;
     
     // Sanitizar credenciales y usar configuración SMTP directa (más estable)

@@ -1,4 +1,4 @@
-import pool from '../../../../utils/db.ts';
+import pool from '@/utils/db';
 
 function generateOrderNumber(prefix = 'CORP') {
   const date = new Date();

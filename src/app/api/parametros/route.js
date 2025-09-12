@@ -1,4 +1,4 @@
-import pool from '../../../../utils/db';
+import pool from '@/utils/db';
 
 export async function POST(request) {
   try {
