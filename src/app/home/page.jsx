@@ -7,7 +7,10 @@ export default function HomePage() {
   const { cartCount, addToCart } = useCart();
   const [activeTab, setActiveTab] = useState("personas");
   const [selectedCategory, setSelectedCategory] = useState("all");
-  const [userPoints] = useState(0);
+  const [userPoints, setUserPoints] = useState(0);
+  const [userBalance, setUserBalance] = useState(0);
+  const [userGiftCards, setUserGiftCards] = useState([]);
+  const [userStats, setUserStats] = useState(null);
   const [showCartMessage, setShowCartMessage] = useState(null);
   const [giftCards, setGiftCards] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -24,7 +27,31 @@ export default function HomePage() {
 
   useEffect(() => {
     fetchGiftCards();
+    fetchUserBalance();
   }, []);
+
+  const fetchUserBalance = async () => {
+    try {
+      const userEmail = localStorage.getItem('userEmail');
+      if (!userEmail) return;
+
+      const response = await fetch(`/api/gift-cards/saldo?email=${encodeURIComponent(userEmail)}`);
+      const data = await response.json();
+      
+      if (data.success) {
+        setUserBalance(data.saldoTotal || 0);
+        setUserGiftCards(data.giftCards || []);
+        setUserStats(data.userStats || null);
+        
+        // Calcular puntos (ejemplo: 1 punto por cada $1000 gastados)
+        const totalSpent = data.userStats?.totalSpent || 0;
+        const points = Math.floor(totalSpent / 1000);
+        setUserPoints(points);
+      }
+    } catch (error) {
+      console.error('Error al cargar saldo del usuario:', error);
+    }
+  };
 
   const fetchGiftCards = async () => {
     try {
@@ -141,6 +168,48 @@ export default function HomePage() {
             
             {/* User & Cart Section */}
             <div className="flex items-center space-x-4">
+              {/* User Balance Display */}
+              <div className="hidden md:flex items-center space-x-3 bg-gradient-to-r from-emerald-50 to-green-50 px-4 py-2 rounded-lg border border-emerald-200/50 shadow-sm group relative">
+                <div className="h-6 w-6 bg-gradient-to-br from-emerald-500 to-green-600 rounded-full flex items-center justify-center">
+                  <span className="text-white text-xs">💰</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-emerald-700 font-semibold text-sm">{formatCLP(userBalance)}</span>
+                  <span className="text-emerald-600 text-xs">{userGiftCards.length} Gift Cards</span>
+                </div>
+                
+                {/* Gift Cards Dropdown */}
+                {userGiftCards.length > 0 && (
+                  <div className="absolute top-full right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-200 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300">
+                    <div className="p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="font-semibold text-gray-800">Mis Gift Cards</h3>
+                        <span className="text-xs text-gray-500">{userGiftCards.length} tarjetas</span>
+                      </div>
+                      <div className="max-h-60 overflow-y-auto space-y-2">
+                        {userGiftCards.map((card, index) => (
+                          <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                            <div className="flex-1">
+                              <div className="text-sm font-medium text-gray-700">{card.codigo}</div>
+                              <div className="text-xs text-gray-500">
+                                Saldo: {formatCLP(card.saldo_actual)}
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className={`text-xs px-2 py-1 rounded-full ${
+                                card.activa ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                              }`}>
+                                {card.activa ? 'Activa' : 'Inactiva'}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {/* Points Display */}
               <div className="hidden sm:flex items-center space-x-2 bg-gradient-to-r from-amber-50 to-yellow-50 px-4 py-2 rounded-full border border-amber-200/50 shadow-sm">
                 <div className="h-6 w-6 bg-gradient-to-br from-yellow-400 to-amber-500 rounded-full flex items-center justify-center">
@@ -148,17 +217,6 @@ export default function HomePage() {
                 </div>
                 <span className="text-amber-800 font-semibold text-sm">{userPoints} pts</span>
               </div>
-
-              {/* Saldo Consulta */}
-              <a
-                href="#"
-                className="hidden md:flex items-center space-x-2 px-3 py-2 rounded-lg bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/50 transition-all duration-200 group"
-              >
-                <div className="h-6 w-6 bg-gradient-to-br from-emerald-500 to-green-600 rounded-full flex items-center justify-center">
-                  <span className="text-white text-xs">💰</span>
-                </div>
-                <span className="text-emerald-700 font-medium text-sm group-hover:text-emerald-800">Consultar Saldo</span>
-              </a>
 
               {/* Profile */}
               <a 
@@ -306,6 +364,46 @@ export default function HomePage() {
                 <span>{category.name}</span>
               </button>
             ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Balance Info */}
+      <div className="md:hidden bg-gradient-to-r from-slate-50 to-gray-50 border-b">
+        <div className="max-w-7xl mx-auto px-4 py-3">
+          <div className="flex items-center justify-between">
+            {/* Balance Info */}
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2 bg-gradient-to-r from-emerald-50 to-green-50 px-3 py-1.5 rounded-lg">
+                <span className="text-emerald-600 text-xs">💰</span>
+                <div className="text-emerald-700">
+                  <div className="text-sm font-semibold">{formatCLP(userBalance)}</div>
+                  <div className="text-xs">{userGiftCards.length} Cards</div>
+                </div>
+              </div>
+              
+              <div className="flex items-center space-x-2 bg-gradient-to-r from-amber-50 to-yellow-50 px-3 py-1.5 rounded-lg">
+                <span className="text-amber-600 text-xs font-bold">★</span>
+                <div className="text-amber-700">
+                  <div className="text-sm font-semibold">{userPoints} pts</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Actions */}
+            <div className="flex items-center space-x-2">
+              <a href="/profile" className="p-2 bg-white rounded-lg shadow-sm">
+                <span className="text-gray-600 text-sm">👤</span>
+              </a>
+              <a href="/cart" className="relative p-2 bg-white rounded-lg shadow-sm">
+                <span className="text-blue-600 text-sm">🛒</span>
+                {cartCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-bold">
+                    {cartCount}
+                  </span>
+                )}
+              </a>
+            </div>
           </div>
         </div>
       </div>

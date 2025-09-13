@@ -4,8 +4,9 @@
 -- Este archivo contiene la estructura completa de la base de datos
 -- para que todos los compañeros tengan exactamente la misma configuración
 -- 
--- ACTUALIZADO: 11 de septiembre de 2025
+-- ACTUALIZADO: 12 de septiembre de 2025
 -- INCLUYE: Todas las tablas necesarias + datos de prueba + usuarios
+-- NUEVA CARACTERÍSTICA: Sistema comprador/beneficiario con columna 'tipo'
 -- ===================================================================
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
@@ -196,6 +197,7 @@ CREATE TABLE IF NOT EXISTS `user_orders` (
   `total_amount` int(11) NOT NULL,
   `purchase_date` timestamp NULL DEFAULT current_timestamp(),
   `status` enum('active','used','expired','cancelled') DEFAULT 'active',
+  `tipo` enum('comprador','beneficiario','comprador_beneficiario') DEFAULT 'beneficiario',
   PRIMARY KEY (`id`),
   KEY `user_id` (`user_id`),
   KEY `order_id` (`order_id`),
@@ -245,10 +247,10 @@ CREATE TABLE IF NOT EXISTS `notifications` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
 -- Datos de ejemplo para user_orders (simulando compras de usuarios)
-INSERT INTO `user_orders` (`user_id`, `order_id`, `gift_card_codes`, `total_amount`, `purchase_date`, `status`) VALUES
-	(1, 1, 'PAN-20250827-PTCC8-0001,PAN-20250827-PTCC8-0002', 30000, '2025-08-27 20:20:27', 'active'),
-	(2, 2, 'PAN-20250827-6ER45-0001', 15000, '2025-08-27 16:28:48', 'active'),
-	(3, 3, 'PAN-20250827-82R07-0001', 15000, '2025-08-27 16:28:48', 'used');
+INSERT INTO `user_orders` (`user_id`, `order_id`, `gift_card_codes`, `total_amount`, `purchase_date`, `status`, `tipo`) VALUES
+	(1, 1, 'PAN-20250827-PTCC8-0001,PAN-20250827-PTCC8-0002', 30000, '2025-08-27 20:20:27', 'active', 'comprador_beneficiario'),
+	(2, 2, 'PAN-20250827-6ER45-0001', 15000, '2025-08-27 16:28:48', 'active', 'beneficiario'),
+	(3, 3, 'PAN-20250827-82R07-0001', 15000, '2025-08-27 16:28:48', 'used', 'comprador');
 
 -- Datos de ejemplo para notificaciones
 INSERT INTO `notifications` (`user_id`, `title`, `message`, `type`, `read_status`, `created_at`) VALUES
@@ -289,6 +291,10 @@ INSERT INTO `notifications` (`user_id`, `title`, `message`, `type`, `read_status
 -- ✅ Notificaciones para usuarios
 -- ✅ Gestión de beneficiarios corporativos
 -- ✅ APIs completas para frontend y backend
+-- ✅ Sistema comprador/beneficiario con columna 'tipo'
+--   * comprador: Solo historial de compra
+--   * beneficiario: Solo acceso a gift cards
+--   * comprador_beneficiario: Ambos (mismo usuario)
 --
 -- 🔧 CONFIGURACIÓN .env.local REQUERIDA:
 -- DB_HOST=127.0.0.1

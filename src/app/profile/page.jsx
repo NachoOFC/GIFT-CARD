@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import ConsultarSaldoModal from '@/components/ConsultarSaldoModal';
 import { formatCLP } from '@/types/type';
 
 export default function ProfilePage() {
@@ -17,6 +18,8 @@ export default function ProfilePage() {
     totalPoints: 0,
     memberSince: ''
   });
+  const [showSaldoModal, setShowSaldoModal] = useState(false);
+  const [selectedGiftCardCode, setSelectedGiftCardCode] = useState('');
   const [formData, setFormData] = useState({
     nombre: '',
     usuario: '',
@@ -69,12 +72,22 @@ export default function ProfilePage() {
   }, [router]);
 
   const calculateUserStats = (orders = userOrders, giftCards = userGiftCards) => {
-    const totalSpent = orders.reduce((sum, order) => sum + (order.total || 0), 0);
+    // Solo contar dinero gastado por el usuario (como comprador, no como beneficiario)
+    const totalSpent = orders
+      .filter(order => order.user_role === 'comprador' || order.user_role === 'comprador_beneficiario')
+      .reduce((sum, order) => sum + (order.total_amount || 0), 0);
+    
     const totalGiftCards = giftCards.length;
     const totalPoints = Math.floor(totalSpent / 1000); // 1 punto por cada $1000
     const memberSince = user?.fecha_registro || new Date().toISOString();
 
-    console.log('📊 Calculando estadísticas:', { totalSpent, totalGiftCards, totalPoints });
+    console.log('📊 Calculando estadísticas:', { 
+      totalSpent, 
+      totalGiftCards, 
+      totalPoints,
+      ordersAsComprador: orders.filter(o => o.user_role === 'comprador' || o.user_role === 'comprador_beneficiario').length,
+      ordersAsBeneficiario: orders.filter(o => o.user_role === 'beneficiario').length
+    });
 
     setUserStats({
       totalSpent,
@@ -680,12 +693,18 @@ export default function ProfilePage() {
                         )}
 
                         <div className="mt-4 flex space-x-2">
-                          <button className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors text-sm">
-                            Ver Detalles
+                          <button 
+                            onClick={() => {
+                              setSelectedGiftCardCode(giftCard.codigo);
+                              setShowSaldoModal(true);
+                            }}
+                            className="flex-1 bg-emerald-600 text-white py-2 px-4 rounded-lg hover:bg-emerald-700 transition-colors text-sm"
+                          >
+                            💰 Consultar Saldo
                           </button>
                           {giftCard.saldo_actual > 0 && (
-                            <button className="flex-1 bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors text-sm">
-                              Usar Gift Card
+                            <button className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors text-sm">
+                              🛒 Usar Gift Card
                             </button>
                           )}
                         </div>
@@ -711,7 +730,7 @@ export default function ProfilePage() {
             {/* Orders Tab */}
             {activeTab === 'orders' && (
               <div className="bg-white rounded-lg shadow-sm p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-6">Historial de Compras</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-6">Historial Completo</h3>
                 
                 {userOrders.length > 0 ? (
                   <div className="space-y-4">
@@ -719,19 +738,46 @@ export default function ProfilePage() {
                       <div key={index} className="border border-gray-200 rounded-lg p-4">
                         <div className="flex justify-between items-start mb-3">
                           <div>
-                            <h4 className="font-semibold text-gray-900">Orden #{order.id}</h4>
+                            <h4 className="font-semibold text-gray-900">Orden #{order.numero_orden}</h4>
                             <p className="text-sm text-gray-600">{formatDate(order.fecha_orden)}</p>
+                            
+                            {/* Indicador de tipo de relación */}
+                            <div className="mt-2">
+                              {order.user_role === 'comprador' && (
+                                <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
+                                  💳 Compra realizada
+                                </span>
+                              )}
+                              {order.user_role === 'beneficiario' && (
+                                <span className="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
+                                  🎁 Gift Card recibida
+                                </span>
+                              )}
+                              {order.user_role === 'comprador_beneficiario' && (
+                                <span className="inline-block bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full">
+                                  🛒 Compra propia
+                                </span>
+                              )}
+                            </div>
                           </div>
                           <div className="text-right">
-                            <p className="font-semibold text-lg">{formatCLP(order.total)}</p>
+                            {/* Mostrar monto solo si el usuario pagó */}
+                            {(order.user_role === 'comprador' || order.user_role === 'comprador_beneficiario') ? (
+                              <p className="font-semibold text-lg text-red-600">-{formatCLP(order.total_amount || 0)}</p>
+                            ) : (
+                              <p className="font-semibold text-lg text-green-600">+{formatCLP(order.total || 0)} (recibido)</p>
+                            )}
                             {getStatusBadge(order.estado)}
                           </div>
                         </div>
                         
                         <div className="text-sm text-gray-600">
-                          <p>Método de pago: {order.metodo_pago || 'Tarjeta de crédito'}</p>
-                          {order.items && (
-                            <p>Items: {order.items} gift card(s)</p>
+                          <p>Método de pago: {order.metodo_pago || 'Corporativo'}</p>
+                          {order.gift_card_codes && (
+                            <p>Gift Card: {order.gift_card_codes}</p>
+                          )}
+                          {order.role_description && (
+                            <p className="mt-1 text-xs text-gray-500">{order.role_description}</p>
                           )}
                         </div>
                       </div>
@@ -740,8 +786,8 @@ export default function ProfilePage() {
                 ) : (
                   <div className="text-center py-12">
                     <div className="text-6xl mb-4">📦</div>
-                    <h4 className="text-xl font-semibold text-gray-600 mb-2">Sin historial de compras</h4>
-                    <p className="text-gray-500">Tus compras aparecerán aquí</p>
+                    <h4 className="text-xl font-semibold text-gray-600 mb-2">Sin historial</h4>
+                    <p className="text-gray-500">Tus compras y gift cards aparecerán aquí</p>
                   </div>
                 )}
               </div>
@@ -829,6 +875,13 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+
+      {/* Modal Consultar Saldo */}
+      <ConsultarSaldoModal 
+        isOpen={showSaldoModal}
+        onClose={() => setShowSaldoModal(false)}
+        giftCardCode={selectedGiftCardCode}
+      />
     </div>
   );
 }
