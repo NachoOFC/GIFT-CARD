@@ -32,24 +32,46 @@ export default function HomePage() {
 
   const fetchUserBalance = async () => {
     try {
-      const userEmail = localStorage.getItem('userEmail');
-      if (!userEmail) return;
+      const currentUser = localStorage.getItem('currentUser');
+      if (!currentUser) {
+        console.log('No hay usuario logueado');
+        return;
+      }
 
+      const userData = JSON.parse(currentUser);
+      const userEmail = userData.gmail || userData.email;
+      
+      if (!userEmail) {
+        console.log('No se encontró email del usuario');
+        return;
+      }
+
+      console.log('🔄 Cargando saldo para:', userEmail);
       const response = await fetch(`/api/gift-cards/saldo?email=${encodeURIComponent(userEmail)}`);
       const data = await response.json();
+      
+      console.log('📊 Respuesta del saldo:', data);
       
       if (data.success) {
         setUserBalance(data.saldoTotal || 0);
         setUserGiftCards(data.giftCards || []);
         setUserStats(data.userStats || null);
         
-        // Calcular puntos (ejemplo: 1 punto por cada $1000 gastados)
-        const totalSpent = data.userStats?.totalSpent || 0;
-        const points = Math.floor(totalSpent / 1000);
+        // Usar los puntos calculados por el servidor basados en el gasto real
+        const points = data.userStats?.points || 0;
         setUserPoints(points);
+        
+        console.log('✅ Saldo cargado:', {
+          saldoTotal: data.saldoTotal,
+          giftCards: data.giftCards?.length,
+          puntos: points,
+          gastoTotal: data.userStats?.totalSpent
+        });
+      } else {
+        console.log('⚠️ Error en la respuesta:', data.message);
       }
     } catch (error) {
-      console.error('Error al cargar saldo del usuario:', error);
+      console.error('❌ Error al cargar saldo del usuario:', error);
     }
   };
 
