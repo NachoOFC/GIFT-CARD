@@ -64,14 +64,39 @@ function PaymentSuccessContent() {
         if (amount && email) {
           console.log('🔄 Generating gift card with params:', { orderId, amount, email, name });
           
+          // El COMPRADOR es siempre el usuario con sesión iniciada
+          const currentUser = localStorage.getItem('currentUser');
+          const guest = localStorage.getItem('guest');
+          let buyerEmail, buyerName;
+          
+          if (currentUser) {
+            const userData = JSON.parse(currentUser);
+            buyerEmail = userData.gmail || userData.email;
+            buyerName = userData.nombre;
+            console.log('👤 COMPRADOR (usuario logueado):', buyerEmail);
+          } else if (guest) {
+            const guestData = JSON.parse(guest);
+            buyerEmail = guestData.email;
+            buyerName = guestData.name || 'Invitado';
+            console.log('👤 COMPRADOR (guest):', buyerEmail);
+          } else {
+            console.error('❌ No hay sesión iniciada - no se puede identificar comprador');
+            throw new Error('No se puede identificar el comprador');
+          }
+          
+          console.log('🎁 BENEFICIARIO (destinatario):', email);
+          console.log('🤔 ¿Es autocompra?', buyerEmail === email ? 'SÍ' : 'NO');
+          
           const response = await fetch('/api/giftcard/generate', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               order_id: orderId || `ORDER-${Date.now()}`,
               monto: parseFloat(amount) || 25000,
-              email_destinatario: email,
-              customer_name: name || 'Cliente'
+              email_destinatario: email, // BENEFICIARIO: quien recibe la gift card
+              email_comprador: buyerEmail, // COMPRADOR: quien tiene sesión iniciada
+              customer_name: buyerName, // Nombre del COMPRADOR
+              beneficiary_name: name || 'Beneficiario' // Nombre del BENEFICIARIO
             })
           });
 

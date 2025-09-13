@@ -68,8 +68,34 @@ export default function ProfilePage() {
     }
   }, [router]);
 
+  const calculateUserStats = (orders = userOrders, giftCards = userGiftCards) => {
+    const totalSpent = orders.reduce((sum, order) => sum + (order.total || 0), 0);
+    const totalGiftCards = giftCards.length;
+    const totalPoints = Math.floor(totalSpent / 1000); // 1 punto por cada $1000
+    const memberSince = user?.fecha_registro || new Date().toISOString();
+
+    console.log('📊 Calculando estadísticas:', { totalSpent, totalGiftCards, totalPoints });
+
+    setUserStats({
+      totalSpent,
+      totalGiftCards,
+      totalPoints,
+      memberSince
+    });
+  };
+
+  // Recalcular estadísticas cuando cambien los datos
+  useEffect(() => {
+    if (userOrders.length > 0 || userGiftCards.length > 0) {
+      calculateUserStats(userOrders, userGiftCards);
+    }
+  }, [userOrders, userGiftCards]);
+
   const loadUserData = async (userId) => {
     try {
+      let giftCardsData = { data: [] };
+      let ordersData = { data: [] };
+
       // Cargar información actualizada del perfil del usuario
       const userResponse = await fetch(`/api/auth/profile?userId=${userId}`);
       if (userResponse.ok) {
@@ -82,36 +108,25 @@ export default function ProfilePage() {
       // Cargar gift cards del usuario
       const giftCardsResponse = await fetch(`/api/orders?userId=${userId}`);
       if (giftCardsResponse.ok) {
-        const giftCardsData = await giftCardsResponse.json();
+        giftCardsData = await giftCardsResponse.json();
         setUserGiftCards(giftCardsData.data || []);
+        console.log('🎁 Gift Cards cargadas:', giftCardsData.data?.length || 0);
       }
 
       // Cargar órdenes del usuario
       const ordersResponse = await fetch(`/api/orders?userId=${userId}&type=orders`);
       if (ordersResponse.ok) {
-        const ordersData = await ordersResponse.json();
+        ordersData = await ordersResponse.json();
         setUserOrders(ordersData.data || []);
+        console.log('📝 Órdenes cargadas:', ordersData.data?.length || 0);
       }
 
-      // Calcular estadísticas
-      calculateUserStats();
+      // Calcular estadísticas DESPUÉS de cargar los datos
+      calculateUserStats(ordersData.data || [], giftCardsData.data || []);
+
     } catch (error) {
       console.error('Error loading user data:', error);
     }
-  };
-
-  const calculateUserStats = () => {
-    const totalSpent = userOrders.reduce((sum, order) => sum + (order.total || 0), 0);
-    const totalGiftCards = userGiftCards.length;
-    const totalPoints = Math.floor(totalSpent / 1000); // 1 punto por cada $1000
-    const memberSince = user?.fecha_registro || new Date().toISOString();
-
-    setUserStats({
-      totalSpent,
-      totalGiftCards,
-      totalPoints,
-      memberSince
-    });
   };
 
   const handleInputChange = (e) => {
