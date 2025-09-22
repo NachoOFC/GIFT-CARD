@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import ConsultarSaldoModal from '@/components/ConsultarSaldoModal';
 import { formatCLP } from '@/types/type';
+import { useAdmin } from '@/hooks/useAdmin';
 
 export default function ProfilePage() {
   const [user, setUser] = useState(null);
@@ -18,6 +19,7 @@ export default function ProfilePage() {
     totalPoints: 0,
     memberSince: ''
   });
+  const isAdmin = useAdmin();
   const [showSaldoModal, setShowSaldoModal] = useState(false);
   const [selectedGiftCardCode, setSelectedGiftCardCode] = useState('');
   const [formData, setFormData] = useState({
@@ -437,6 +439,17 @@ export default function ProfilePage() {
                     Seguridad
                   </span>
                 </button>
+                {isAdmin ? (
+                  <button
+                    onClick={() => router.push('/admin/Parametros')}
+                    className="w-full text-left px-3 py-2 rounded-lg transition-colors text-gray-600 hover:bg-gray-100"
+                  >
+                    <span className="flex items-center">
+                      <span className="mr-3">⚙️</span>
+                      Parámetros
+                    </span>
+                  </button>
+                ) : null}
               </nav>
             </div>
           </div>
