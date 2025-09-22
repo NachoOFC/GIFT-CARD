@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { useCart } from '@/contexts/CartContext';
 import { 
   CheckCircle, 
   Download, 
@@ -24,6 +25,7 @@ import {
 
 function PaymentSuccessContent() {
   const searchParams = useSearchParams();
+  const { clearCart } = useCart();
   
   // Forzar login/guest antes de mostrar la página de éxito
   if (typeof window !== 'undefined') {
@@ -119,6 +121,10 @@ function PaymentSuccessContent() {
             setGiftCard(giftCardData);
             setEmailSent(data.data.email_enviado);
             console.log('🎯 Gift Card data saved:', giftCardData);
+            
+            // ✅ Limpiar el carrito después de compra exitosa
+            console.log('🧹 Limpiando carrito después de compra exitosa...');
+            clearCart();
           } else {
             throw new Error(data.error);
           }
@@ -135,6 +141,10 @@ function PaymentSuccessContent() {
             url_activacion: '/activate/demo-token-12345'
           });
           setEmailSent(true);
+          
+          // ✅ También limpiar carrito en modo demostración
+          console.log('🧹 Limpiando carrito (modo demostración)...');
+          clearCart();
         }
         
         setProgressComplete(true);

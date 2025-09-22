@@ -140,7 +140,11 @@ export default function CartPage() {
         
         console.log('🔄 Redirigiendo a:', successUrl);
         
-        // Redirigir ANTES de limpiar el carrito para que payment-success pueda acceder a los items
+        // Limpiar carrito después del pago exitoso ANTES de la redirección
+        console.log('🧹 Pago exitoso - Limpiando carrito...');
+        clearCart();
+        
+        // Redirigir después de limpiar
         window.location.href = successUrl;
       }
       
