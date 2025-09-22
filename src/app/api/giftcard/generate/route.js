@@ -256,7 +256,10 @@ export async function POST(request) {
 
       if (beneficiaryUser.length > 0) {
         const beneficiaryUserId = beneficiaryUser[0].id;
-        const buyerUserId = buyerUser.length > 0 ? buyerUser[0].id : beneficiaryUserId;
+        const buyerUserId = buyerUser.length > 0 ? buyerUser[0].id : null;
+
+        console.log(`🔍 Usuario beneficiario: ${beneficiaryUserId} (${email_destinatario})`);
+        console.log(`🔍 Usuario comprador: ${buyerUserId || 'NO ENCONTRADO'} (${emailComprador})`);
 
         // Crear gift card individual
         const giftCardCode = `GC-${order_id}-${Date.now().toString().slice(-4)}`;
@@ -279,8 +282,12 @@ export async function POST(request) {
 
         console.log(`✅ Gift card creada: ${giftCardCode} por $${monto}`);
 
-        // Si comprador = beneficiario: crear UNA relación con ambos roles
-        if (buyerUserId === beneficiaryUserId) {
+        // Determinar si es autocompra (mismo email) o compra para otro
+        const isAutoCompra = emailComprador === email_destinatario;
+        console.log(`🎯 ¿Es autocompra?: ${isAutoCompra ? 'SÍ' : 'NO'}`);
+
+        // Si es autocompra Y ambos tienen cuenta: crear UNA relación con ambos roles
+        if (isAutoCompra && buyerUserId && buyerUserId === beneficiaryUserId) {
           await pool.query(`
             INSERT INTO user_orders (user_id, order_id, gift_card_codes, total_amount, purchase_date, status, tipo)
             VALUES (?, ?, ?, ?, NOW(), 'active', 'comprador_beneficiario')
@@ -291,11 +298,11 @@ export async function POST(request) {
             monto
           ]);
 
-          console.log(`✅ Relación user_orders creada: COMPRADOR=BENEFICIARIO ${beneficiaryUserId}`);
+          console.log(`✅ AUTOCOMPRA: Usuario ${beneficiaryUserId} es comprador Y beneficiario`);
         } else {
-          // Si son diferentes: beneficiario tiene gift card, comprador solo historial
+          // Compra para OTRA PERSONA o comprador sin cuenta
           
-          // BENEFICIARIO: tiene la gift card para usar (SIN monto de compra)
+          // SIEMPRE crear registro para beneficiario (tiene la gift card)
           await pool.query(`
             INSERT INTO user_orders (user_id, order_id, gift_card_codes, total_amount, purchase_date, status, tipo)
             VALUES (?, ?, ?, ?, NOW(), 'active', 'beneficiario')
@@ -308,18 +315,22 @@ export async function POST(request) {
 
           console.log(`✅ BENEFICIARIO ${beneficiaryUserId}: tiene gift card ${giftCardCode} (sin costo)`);
 
-          // COMPRADOR: solo historial de compra (sin gift_card_codes pero CON el monto)
-          await pool.query(`
-            INSERT INTO user_orders (user_id, order_id, gift_card_codes, total_amount, purchase_date, status, tipo)
-            VALUES (?, ?, ?, ?, NOW(), 'active', 'comprador')
-          `, [
-            buyerUserId,
-            orderId,
-            null, // No tiene acceso a la gift card
-            monto // El comprador SÍ pagó este monto
-          ]);
+          // Solo crear registro para comprador SI tiene cuenta registrada
+          if (buyerUserId && buyerUserId !== beneficiaryUserId) {
+            await pool.query(`
+              INSERT INTO user_orders (user_id, order_id, gift_card_codes, total_amount, purchase_date, status, tipo)
+              VALUES (?, ?, ?, ?, NOW(), 'active', 'comprador')
+            `, [
+              buyerUserId,
+              orderId,
+              null, // No tiene acceso a la gift card
+              monto // El comprador SÍ pagó este monto
+            ]);
 
-          console.log(`✅ COMPRADOR ${buyerUserId}: solo historial de compra por $${monto}`);
+            console.log(`✅ COMPRADOR ${buyerUserId}: solo historial de compra por $${monto}`);
+          } else if (!buyerUserId) {
+            console.log(`⚠️ COMPRADOR SIN CUENTA: ${emailComprador} - no se crea registro en user_orders`);
+          }
         }
 
       } else {

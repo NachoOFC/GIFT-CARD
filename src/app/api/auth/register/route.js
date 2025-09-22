@@ -5,8 +5,8 @@ export async function POST(request) {
     const body = await request.json();
     
     // Esperamos recibir los campos con nombres compatibles con la tabla `usuarios`:
-    // { nombre, usuario, password, perfil?, estado? }
-    const { nombre, usuario, password, perfil, estado } = body;
+    // { nombre, usuario, gmail, password, perfil?, estado? }
+    const { nombre, usuario, gmail, password, perfil, estado } = body;
     
     if (!usuario || !password) {
       return Response.json(
@@ -19,26 +19,32 @@ export async function POST(request) {
     const nombreToInsert = nombre && String(nombre).trim() !== '' ? String(nombre).trim() : (String(usuario).split('@')[0] || '');
     const perfilToInsert = perfil && String(perfil).trim() !== '' ? String(perfil).trim() : 'user';
     const estadoToInsert = typeof estado !== 'undefined' && estado !== null ? estado : 1; // 1 = activo
+    
+    // Si el usuario es un email, usar también como gmail
+    const gmailToInsert = gmail || (usuario.includes('@') ? usuario : null);
 
     const connection = await pool.getConnection();
     try {
       await connection.beginTransaction();
 
-      // Verificar si ya existe el usuario en la tabla `usuarios` (columna `usuario`)
-      const [existing] = await connection.query('SELECT COUNT(*) as count FROM usuarios WHERE usuario = ?', [usuario]);
+      // Verificar si ya existe el usuario en la tabla `usuarios` (columna `usuario` o `gmail`)
+      const [existing] = await connection.query(
+        'SELECT COUNT(*) as count FROM usuarios WHERE usuario = ? OR gmail = ?', 
+        [usuario, gmailToInsert]
+      );
       if (existing[0].count > 0) {
         await connection.rollback();
         return Response.json(
-          { success: false, message: 'Usuario ya registrado' },
+          { success: false, message: 'Usuario o email ya registrado' },
           { status: 400 }
         );
       }
 
       // Insertar nuevo usuario en la tabla `usuarios`.
-      // Columnas: id, nombre, usuario, password, perfil, estado, ultimo_login, fecha_creacion
+      // Columnas: id, nombre, usuario, gmail, password, perfil, estado, ultimo_login, fecha_creacion
       const [result] = await connection.execute(
-        'INSERT INTO usuarios (nombre, usuario, password, perfil, estado, ultimo_login, fecha_creacion) VALUES (?, ?, ?, ?, ?, NOW(), NOW())',
-        [nombreToInsert, usuario, password, perfilToInsert, estadoToInsert]
+        'INSERT INTO usuarios (nombre, usuario, gmail, password, perfil, estado, ultimo_login, fecha_creacion) VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())',
+        [nombreToInsert, usuario, gmailToInsert, password, perfilToInsert, estadoToInsert]
       );
 
       await connection.commit();

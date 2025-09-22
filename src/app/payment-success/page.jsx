@@ -67,17 +67,19 @@ function PaymentSuccessContent() {
           // El COMPRADOR es siempre el usuario con sesión iniciada
           const currentUser = localStorage.getItem('currentUser');
           const guest = localStorage.getItem('guest');
-          let buyerEmail, buyerName;
+          let buyerEmail, buyerName, buyerUserId;
           
           if (currentUser) {
             const userData = JSON.parse(currentUser);
-            buyerEmail = userData.gmail || userData.email;
+            buyerEmail = userData.gmail || userData.email || userData.usuario;
             buyerName = userData.nombre;
-            console.log('👤 COMPRADOR (usuario logueado):', buyerEmail);
+            buyerUserId = userData.id;
+            console.log('👤 COMPRADOR (usuario logueado):', buyerEmail, 'ID:', buyerUserId);
           } else if (guest) {
             const guestData = JSON.parse(guest);
             buyerEmail = guestData.email;
             buyerName = guestData.name || 'Invitado';
+            buyerUserId = null;
             console.log('👤 COMPRADOR (guest):', buyerEmail);
           } else {
             console.error('❌ No hay sesión iniciada - no se puede identificar comprador');
@@ -86,6 +88,7 @@ function PaymentSuccessContent() {
           
           console.log('🎁 BENEFICIARIO (destinatario):', email);
           console.log('🤔 ¿Es autocompra?', buyerEmail === email ? 'SÍ' : 'NO');
+          console.log('🔑 COMPRADOR ID:', buyerUserId, 'vs BENEFICIARIO EMAIL:', email);
           
           const response = await fetch('/api/giftcard/generate', {
             method: 'POST',
