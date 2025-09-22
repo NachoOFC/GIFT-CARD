@@ -2,6 +2,7 @@
 
 import { useCart } from '@/contexts/CartContext'
 import { useState } from 'react'
+import { validateEmail, detectSuspiciousEmail } from '@/utils/emailValidation'
 
 export default function CartPage() {
   const { 
@@ -19,24 +20,71 @@ export default function CartPage() {
   const [customerEmail, setCustomerEmail] = useState('')
   const [customerName, setCustomerName] = useState('')
   const [emailError, setEmailError] = useState('')
+  const [emailSuggestion, setEmailSuggestion] = useState('')
 
   const formatCurrency = (value) => {
     const numValue = parseFloat(value) || 0;
     return '$' + Math.round(numValue).toLocaleString('es-CL');
   }
 
+  const handleEmailChange = (e) => {
+    const email = e.target.value;
+    setCustomerEmail(email);
+    
+    // Limpiar errores y sugerencias previas
+    setEmailError('');
+    setEmailSuggestion('');
+    
+    // Validar en tiempo real si hay contenido
+    if (email.length > 0) {
+      const validation = validateEmail(email);
+      
+      if (!validation.isValid) {
+        if (validation.suggestion) {
+          setEmailSuggestion(validation.suggestion);
+          setEmailError(`${validation.error}`);
+        } else {
+          setEmailError(validation.error);
+        }
+      } else if (detectSuspiciousEmail(email)) {
+        setEmailError('Este email parece tener un error. Por favor verifica que esté correcto.');
+      }
+    }
+  }
+
+  const applySuggestion = () => {
+    setCustomerEmail(emailSuggestion);
+    setEmailSuggestion('');
+    setEmailError('');
+  }
+
   const handleCheckout = async () => {
     if (cartItems.length === 0) return
     
-    // Validar email
+    // Validar email final antes de proceder
     if (!customerEmail) {
       setEmailError('Por favor ingresa tu email')
       return
     }
     
-    if (!customerEmail.includes('@')) {
-      setEmailError('Por favor ingresa un email válido')
+    const emailValidation = validateEmail(customerEmail);
+    if (!emailValidation.isValid) {
+      setEmailError(emailValidation.error)
+      if (emailValidation.suggestion) {
+        setEmailSuggestion(emailValidation.suggestion)
+      }
       return
+    }
+    
+    if (detectSuspiciousEmail(customerEmail)) {
+      const confirmProceed = window.confirm(
+        `El email "${customerEmail}" parece tener un error de tipeo. ¿Estás seguro de que está correcto?\n\nSi continúas, la gift card podría no llegar al destinatario correcto.`
+      );
+      
+      if (!confirmProceed) {
+        setEmailError('Por favor verifica tu email antes de continuar');
+        return;
+      }
     }
     
     if (!customerName) {
@@ -45,6 +93,7 @@ export default function CartPage() {
     }
     
     setEmailError('')
+    setEmailSuggestion('')
     setIsProcessing(true)
     
     try {
@@ -259,13 +308,32 @@ export default function CartPage() {
                     <input
                       type="email"
                       value={customerEmail}
-                      onChange={(e) => setCustomerEmail(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      onChange={handleEmailChange}
+                      className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
+                        emailError 
+                          ? 'border-red-300 focus:ring-red-500' 
+                          : 'border-gray-300 focus:ring-blue-500'
+                      }`}
                       placeholder="tu@email.com"
                       required
                     />
                     {emailError && (
                       <p className="text-red-600 text-sm mt-1">{emailError}</p>
+                    )}
+                    {emailSuggestion && (
+                      <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded">
+                        <p className="text-sm text-yellow-800">
+                          ¿Quisiste decir: 
+                          <button
+                            type="button"
+                            onClick={applySuggestion}
+                            className="ml-1 text-blue-600 underline hover:text-blue-800"
+                          >
+                            {emailSuggestion}
+                          </button>
+                          ?
+                        </p>
+                      </div>
                     )}
                   </div>
                 </div>

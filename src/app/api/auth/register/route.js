@@ -49,11 +49,17 @@ export async function POST(request) {
 
       await connection.commit();
 
+      // Obtener los datos completos del usuario recién creado para login automático
+      const [newUser] = await connection.query(
+        'SELECT id, nombre, usuario, gmail, perfil, estado FROM usuarios WHERE id = ?',
+        [result.insertId]
+      );
+
       return Response.json(
         { 
           success: true, 
           message: 'Usuario registrado exitosamente', 
-          data: { id: result.insertId, usuario } 
+          data: newUser[0] // Devolvemos los datos completos del usuario
         },
         { status: 201 }
       );

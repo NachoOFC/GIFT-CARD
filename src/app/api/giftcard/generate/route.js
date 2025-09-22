@@ -1,6 +1,7 @@
 import pool from '@/utils/db';
 import QRCode from 'qrcode';
 import nodemailer from 'nodemailer';
+import { validateEmail, detectSuspiciousEmail } from '@/utils/emailValidation';
 
   // Función para enviar email de comprobante con diseño profesional premium
 async function sendReceiptEmail({ to, purchaseData, transactionId, qrDataURL, tempPassword }) {
@@ -72,6 +73,35 @@ export async function POST(request) {
         success: false,
         error: 'Parámetros requeridos: order_id, monto, email_destinatario'
       }, { status: 400 });
+    }
+
+    // Validar email del destinatario
+    const emailValidation = validateEmail(email_destinatario);
+    if (!emailValidation.isValid) {
+      console.error('❌ Email destinatario inválido:', email_destinatario, emailValidation.error);
+      return Response.json({
+        success: false,
+        error: `Email destinatario inválido: ${emailValidation.error}`,
+        suggestion: emailValidation.suggestion
+      }, { status: 400 });
+    }
+
+    // Validar email del comprador si se proporciona
+    if (email_comprador) {
+      const buyerEmailValidation = validateEmail(email_comprador);
+      if (!buyerEmailValidation.isValid) {
+        console.error('❌ Email comprador inválido:', email_comprador, buyerEmailValidation.error);
+        return Response.json({
+          success: false,
+          error: `Email comprador inválido: ${buyerEmailValidation.error}`,
+          suggestion: buyerEmailValidation.suggestion
+        }, { status: 400 });
+      }
+    }
+
+    // Advertir sobre emails sospechosos
+    if (detectSuspiciousEmail(email_destinatario)) {
+      console.warn('⚠️ Email destinatario sospechoso:', email_destinatario);
     }
 
     // Si no se especifica email_comprador, asumimos que el destinatario es quien compra

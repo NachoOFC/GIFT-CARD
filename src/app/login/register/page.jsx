@@ -26,8 +26,14 @@ export default function Register() {
       .then(async res => {
         const json = await res.json();
         if (!res.ok) throw new Error(json?.message || 'Error al registrar');
-        alert('Registro exitoso. Ya puedes iniciar sesión.');
-        router.push('/login');
+        
+        // Registro exitoso - ahora loguear automáticamente
+        console.log('✅ Registro exitoso, logueando automáticamente...');
+        localStorage.removeItem('guest');
+        localStorage.setItem('currentUser', JSON.stringify(json.data));
+        
+        alert('¡Registro exitoso! Bienvenido a la plataforma.');
+        router.push('/home');
       })
       .catch(err => {
         console.error('Registro error:', err);
