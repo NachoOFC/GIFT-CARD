@@ -705,20 +705,35 @@ export default function ProfilePage() {
                           </div>
                         )}
 
-                        <div className="mt-4 flex space-x-2">
+                        <div className="mt-4 flex flex-col sm:flex-row gap-2">
                           <button 
                             onClick={() => {
                               setSelectedGiftCardCode(giftCard.codigo);
                               setShowSaldoModal(true);
                             }}
-                            className="flex-1 bg-emerald-600 text-white py-2 px-4 rounded-lg hover:bg-emerald-700 transition-colors text-sm"
+                            className="flex-1 bg-emerald-600 text-white py-2 px-4 rounded-lg hover:bg-emerald-700 transition-colors text-sm flex items-center justify-center"
                           >
                             💰 Consultar Saldo
                           </button>
                           {giftCard.saldo_actual > 0 && (
-                            <button className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors text-sm">
-                              🛒 Usar Gift Card
-                            </button>
+                            <>
+                              <button 
+                                onClick={() => router.push(`/redeem?code=${giftCard.codigo}`)}
+                                className="flex-1 bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors text-sm flex items-center justify-center"
+                              >
+                                🎁 Canjear
+                              </button>
+                              <button 
+                                className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors text-sm flex items-center justify-center"
+                              >
+                                🛒 Usar
+                              </button>
+                            </>
+                          )}
+                          {giftCard.saldo_actual === 0 && (
+                            <div className="flex-1 bg-gray-100 text-gray-500 py-2 px-4 rounded-lg text-sm text-center">
+                              💸 Saldo Agotado
+                            </div>
                           )}
                         </div>
                       </div>

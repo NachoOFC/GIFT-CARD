@@ -246,6 +246,41 @@ CREATE TABLE IF NOT EXISTS `notifications` (
   CONSTRAINT `fk_notifications_user` FOREIGN KEY (`user_id`) REFERENCES `usuarios` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
+-- ===================================================================
+-- TABLA: gift_card_transactions (para sistema de canje parcial)
+-- ===================================================================
+CREATE TABLE IF NOT EXISTS `gift_card_transactions` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+    `transaction_id` varchar(50) NOT NULL,
+  `giftcard_codigo` varchar(50) NOT NULL,
+  `giftcard_id` int(11) NOT NULL,
+  `user_id` int(11) DEFAULT NULL,
+  `amount` int(11) NOT NULL COMMENT 'Monto de la transacción (positivo para canje)',
+  `balance_before` int(11) NOT NULL COMMENT 'Saldo antes de la transacción',
+  `balance_after` int(11) NOT NULL COMMENT 'Saldo después de la transacción',
+  `transaction_type` enum('redeem','purchase','refund','adjustment') DEFAULT 'redeem',
+  `status` enum('pending','completed','failed','cancelled') DEFAULT 'completed',
+    `idempotency_key` varchar(100) NOT NULL COMMENT 'Clave para evitar duplicados',
+  `description` text DEFAULT NULL,
+  `metadata` json DEFAULT NULL COMMENT 'Datos adicionales de la transacción',
+  `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `transaction_id` (`transaction_id`),
+  UNIQUE KEY `idempotency_key` (`idempotency_key`),
+  KEY `giftcard_codigo` (`giftcard_codigo`),
+  KEY `giftcard_id` (`giftcard_id`),
+  KEY `user_id` (`user_id`),
+  KEY `transaction_type` (`transaction_type`),
+  KEY `created_at` (`created_at`),
+  KEY `idx_gct_codigo_date` (`giftcard_codigo`, `created_at` DESC),
+  KEY `idx_gct_user_date` (`user_id`, `created_at` DESC),
+  
+  CONSTRAINT `fk_gct_giftcard` FOREIGN KEY (`giftcard_id`) REFERENCES `gift_cards` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_gct_user` FOREIGN KEY (`user_id`) REFERENCES `usuarios` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+
 -- Datos de ejemplo para user_orders (simulando compras de usuarios)
 INSERT INTO `user_orders` (`user_id`, `order_id`, `gift_card_codes`, `total_amount`, `purchase_date`, `status`, `tipo`) VALUES
 	(1, 1, 'PAN-20250827-PTCC8-0001,PAN-20250827-PTCC8-0002', 30000, '2025-08-27 20:20:27', 'active', 'comprador_beneficiario'),
@@ -257,6 +292,41 @@ INSERT INTO `notifications` (`user_id`, `title`, `message`, `type`, `read_status
 	(1, 'Bienvenido al sistema', 'Tu cuenta de administrador ha sido creada exitosamente', 'success', 1, NOW()),
 	(2, 'Gift Card Activada', 'Tu gift card por $15,000 ha sido activada', 'success', 0, NOW()),
 	(3, 'Perfil Actualizado', 'Tu información de perfil ha sido actualizada', 'info', 1, NOW());
+
+-- ===================================================================
+-- DATOS DE EJEMPLO PARA TRANSACCIONES DE GIFT CARDS
+-- ===================================================================
+-- Ejemplo de transacción de canje
+INSERT INTO `gift_card_transactions` (
+  `transaction_id`, 
+  `giftcard_codigo`, 
+  `giftcard_id`,
+  `user_id`,
+  `amount`, 
+  `balance_before`, 
+  `balance_after`, 
+  `transaction_type`,
+  `idempotency_key`,
+  `description`,
+  `metadata`
+) VALUES 
+(
+  CONCAT('TX-', DATE_FORMAT(NOW(), '%Y%m%d'), '-', LPAD(1, 6, '0')),
+  'PAN-0001',
+  4,
+  2,
+  5000,
+  20000,
+  15000,
+  'redeem',
+  CONCAT('IDEM-', UNIX_TIMESTAMP(), '-1'),
+  'Canje parcial de Gift Card de prueba',
+  JSON_OBJECT(
+    'location', 'Santiago, Chile',
+    'device', 'Web Browser',
+    'ip_address', '127.0.0.1'
+  )
+);
 
 /*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
@@ -277,6 +347,7 @@ INSERT INTO `notifications` (`user_id`, `title`, `message`, `type`, `read_status
 -- - user_orders: Tracking de compras por usuario
 -- - audit_log: Auditoría completa del sistema
 -- - notifications: Sistema de notificaciones
+-- - gift_card_transactions: Sistema de canje parcial con idempotencia
 --
 -- 👥 USUARIOS DE PRUEBA INCLUIDOS:
 -- - admin / 123456 (perfil admin) - con datos completos de perfil
@@ -291,6 +362,8 @@ INSERT INTO `notifications` (`user_id`, `title`, `message`, `type`, `read_status
 -- ✅ Notificaciones para usuarios
 -- ✅ Gestión de beneficiarios corporativos
 -- ✅ APIs completas para frontend y backend
+-- ✅ Sistema de canje parcial con ledger de transacciones
+-- ✅ Idempotencia para evitar doble descuento
 -- ✅ Sistema comprador/beneficiario con columna 'tipo'
 --   * comprador: Solo historial de compra
 --   * beneficiario: Solo acceso a gift cards
@@ -324,6 +397,9 @@ INSERT INTO `notifications` (`user_id`, `title`, `message`, `type`, `read_status
 -- - Generación de gift cards
 -- - Sistema de órdenes corporativas
 -- - Auditoría y tracking completo
+-- - Sistema de canje parcial de Gift Cards
+-- - Comprobantes con QR automáticos
+-- - Historial completo de transacciones
 --
 -- 📧 Para habilitar emails, agregar:
 -- GMAIL_USER=tu_email@gmail.com
