@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import ConsultarSaldoModal from '@/components/ConsultarSaldoModal';
+import CreateQr from '@/components/Emision-Qr/CreateQr';
 import { formatCLP } from '@/types/type';
 import { useAdmin } from '@/hooks/useAdmin';
 
@@ -22,6 +23,8 @@ export default function ProfilePage() {
   const isAdmin = useAdmin();
   const [showSaldoModal, setShowSaldoModal] = useState(false);
   const [selectedGiftCardCode, setSelectedGiftCardCode] = useState('');
+  const [showQrModal, setShowQrModal] = useState(false);
+  const [qrGiftCard, setQrGiftCard] = useState(null);
   const [formData, setFormData] = useState({
     nombre: '',
     usuario: '',
@@ -706,35 +709,30 @@ export default function ProfilePage() {
                         )}
 
                         <div className="mt-4 flex flex-col sm:flex-row gap-2">
-                          <button 
-                            onClick={() => {
-                              setSelectedGiftCardCode(giftCard.codigo);
-                              setShowSaldoModal(true);
-                            }}
-                            className="flex-1 bg-emerald-600 text-white py-2 px-4 rounded-lg hover:bg-emerald-700 transition-colors text-sm flex items-center justify-center"
-                          >
-                            💰 Consultar Saldo
-                          </button>
-                          {giftCard.saldo_actual > 0 && (
-                            <>
-                              <button 
-                                onClick={() => router.push(`/redeem?code=${giftCard.codigo}`)}
-                                className="flex-1 bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors text-sm flex items-center justify-center"
-                              >
-                                🎁 Canjear
-                              </button>
-                              <button 
-                                className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors text-sm flex items-center justify-center"
-                              >
-                                🛒 Usar
-                              </button>
-                            </>
-                          )}
-                          {giftCard.saldo_actual === 0 && (
-                            <div className="flex-1 bg-gray-100 text-gray-500 py-2 px-4 rounded-lg text-sm text-center">
-                              💸 Saldo Agotado
-                            </div>
-                          )}
+                            {giftCard.saldo_actual > 0 && (
+                              <>
+                                <button 
+                                  onClick={() => router.push(`/redeem?code=${giftCard.codigo}`)}
+                                  className="flex-1 bg-white border border-gray-300 text-gray-900 py-2 px-4 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium"
+                                >
+                                  Canjear
+                                </button>
+                                <button 
+                                  className="flex-1 bg-white border border-gray-300 text-gray-900 py-2 px-4 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium"
+                                  onClick={() => {
+                                    setQrGiftCard(giftCard);
+                                    setShowQrModal(true);
+                                  }}
+                                >
+                                  Activar
+                                </button>
+                              </>
+                            )}
+                            {giftCard.saldo_actual === 0 && (
+                              <div className="flex-1 bg-gray-100 text-gray-500 py-2 px-4 rounded-lg text-sm text-center font-medium">
+                                Saldo Agotado
+                              </div>
+                            )}
                         </div>
                       </div>
                     ))}
@@ -910,6 +908,26 @@ export default function ProfilePage() {
         onClose={() => setShowSaldoModal(false)}
         giftCardCode={selectedGiftCardCode}
       />
+      {/* Modal QR Activación */}
+      {showQrModal && qrGiftCard && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50" 
+          onClick={() => setShowQrModal(false)}
+        >
+          <div 
+            className="bg-white rounded-2xl shadow-lg p-8 max-w-md w-full flex items-center justify-center" 
+            onClick={e => e.stopPropagation()}
+          >
+            <CreateQr 
+              giftCardData={{ codigo: qrGiftCard.codigo, estado: 'desactivada' }}
+              transactionId={qrGiftCard.codigo}
+              amount={qrGiftCard.saldo_actual}
+              size={240}
+              className="qr-print"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
