@@ -3,7 +3,7 @@ export const databaseConfig = {
   // Database connection settings
   host: process.env.DB_HOST || 'localhost',
   port: process.env.DB_PORT || 3306,
-  database: process.env.DB_NAME || 'gift_cards',
+  database: process.env.DB_NAME || 'gift-card',
   user: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || '',
   
