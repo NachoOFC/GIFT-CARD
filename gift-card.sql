@@ -1,4 +1,29 @@
 -- ===================================================================
+-- TABLA: empresas (registro y gestión de cuentas empresariales)
+-- ===================================================================
+CREATE TABLE IF NOT EXISTS `empresas` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `nombre` VARCHAR(255) NOT NULL,
+  `rut` VARCHAR(20) NOT NULL,
+  `email` VARCHAR(255) NOT NULL,
+  `telefono` VARCHAR(30) DEFAULT NULL,
+  `direccion` VARCHAR(255) DEFAULT NULL,
+  `ciudad` VARCHAR(100) DEFAULT NULL,
+  `region` VARCHAR(100) DEFAULT NULL,
+  `pais` VARCHAR(100) DEFAULT 'Chile',
+  `contacto_nombre` VARCHAR(255) DEFAULT NULL,
+  `contacto_email` VARCHAR(255) DEFAULT NULL,
+  `contacto_telefono` VARCHAR(30) DEFAULT NULL,
+  `servicio_contacto` VARCHAR(255) DEFAULT NULL COMMENT 'Contacto para soporte o problemas con gift cards',
+  `logo_url` VARCHAR(500) DEFAULT NULL,
+  `fecha_registro` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+  `estado` TINYINT(1) DEFAULT 1,
+  `password` VARCHAR(255) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `rut` (`rut`),
+  UNIQUE KEY `email` (`email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+-- ===================================================================
 -- CONFIGURACIÓN COMPLETA DE BASE DE DATOS - GIFT CARD SYSTEM
 -- ===================================================================
 -- Este archivo contiene la estructura completa de la base de datos

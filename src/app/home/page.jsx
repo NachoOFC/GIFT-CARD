@@ -34,44 +34,42 @@ export default function HomePage() {
     try {
       const currentUser = localStorage.getItem('currentUser');
       if (!currentUser) {
-        console.log('No hay usuario logueado');
+        setUserBalance(0);
+        setUserGiftCards([]);
+        setUserStats(null);
+        setUserPoints(0);
         return;
       }
 
       const userData = JSON.parse(currentUser);
       const userEmail = userData.gmail || userData.email;
-      
       if (!userEmail) {
-        console.log('No se encontró email del usuario');
+        setUserBalance(0);
+        setUserGiftCards([]);
+        setUserStats(null);
+        setUserPoints(0);
         return;
       }
 
-      console.log('🔄 Cargando saldo para:', userEmail);
       const response = await fetch(`/api/gift-cards/saldo?email=${encodeURIComponent(userEmail)}`);
       const data = await response.json();
-      
-      console.log('📊 Respuesta del saldo:', data);
-      
       if (data.success) {
         setUserBalance(data.saldoTotal || 0);
         setUserGiftCards(data.giftCards || []);
         setUserStats(data.userStats || null);
-        
-        // Usar los puntos calculados por el servidor basados en el gasto real
         const points = data.userStats?.points || 0;
         setUserPoints(points);
-        
-        console.log('✅ Saldo cargado:', {
-          saldoTotal: data.saldoTotal,
-          giftCards: data.giftCards?.length,
-          puntos: points,
-          gastoTotal: data.userStats?.totalSpent
-        });
       } else {
-        console.log('⚠️ Error en la respuesta:', data.message);
+        setUserBalance(0);
+        setUserGiftCards([]);
+        setUserStats(null);
+        setUserPoints(0);
       }
     } catch (error) {
-      console.error('❌ Error al cargar saldo del usuario:', error);
+      setUserBalance(0);
+      setUserGiftCards([]);
+      setUserStats(null);
+      setUserPoints(0);
     }
   };
 
@@ -241,16 +239,23 @@ export default function HomePage() {
               </div>
 
               {/* Profile */}
-              <a 
-                href="/profile"
-                className="p-3 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200/80 transition-all duration-200 group shadow-sm"
-                title="Mi Perfil"
-              >
-                <div className="h-6 w-6 bg-gradient-to-br from-slate-600 to-slate-700 rounded-full flex items-center justify-center">
-                  <span className="text-white text-sm">👤</span>
-                </div>
-              </a>
-
+              // ...
+                <button
+                  onClick={() => {
+                    const currentUser = localStorage.getItem('currentUser');
+                    if (currentUser) {
+                      window.location.href = '/profile';
+                    } else {
+                      window.location.href = '/login';
+                    }
+                  }}
+                  className="p-3 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200/80 transition-all duration-200 group shadow-sm"
+                  title="Mi Perfil"
+                >
+                  <div className="h-6 w-6 bg-gradient-to-br from-slate-600 to-slate-700 rounded-full flex items-center justify-center">
+                    <span className="text-white text-sm">👤</span>
+                  </div>
+                </button>
               {/* Cart */}
               <a 
                 href="/cart"
@@ -329,7 +334,14 @@ export default function HomePage() {
                   <span className="text-sm">Personas</span>
                 </button>
                 <button
-                  onClick={() => window.location.href = '/empresas'}
+                  onClick={() => {
+                    const empresaSession = localStorage.getItem('empresaSession');
+                    if (empresaSession) {
+                      window.location.href = '/empresas/home';
+                    } else {
+                      window.location.href = '/empresas';
+                    }
+                  }}
                   className={`px-6 py-3 rounded-lg flex items-center space-x-3 transition-all duration-300 font-medium ${
                     activeTab === "empresas"
                       ? "bg-white text-blue-700 shadow-md ring-1 ring-blue-100 transform scale-105"

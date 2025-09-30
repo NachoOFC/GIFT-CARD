@@ -99,29 +99,35 @@ export default function CartPage() {
     try {
       if (paymentMethod === 'webpay') {
         // Procesar pago con WebPay
-        const orderId = `ORDER_${Date.now()}`
-        
+        const orderId = `ORDER_${Date.now()}`;
+        // Simulación de datos Webpay, reemplaza por los reales si tienes la integración
+        const webpayToken = 'demo-token'; // Debes obtener el token real de Webpay
+        const webpayStatus = 'AUTHORIZED'; // Debes obtener el status real de Webpay
+
         const response = await fetch('/api/procesar-pago', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            orderId,
+            order_id: orderId,
+            token: webpayToken,
+            buy_order: orderId,
             amount: getCartGrandTotal(),
-            items: cartItems,
-            customerName: customerName,
-            customerEmail: customerEmail
+            webpay_response: {
+              status: webpayStatus
+            }
           })
-        })
+        });
 
-        const result = await response.json()
+        const result = await response.json();
 
         if (result.success) {
-          // Redirigir a WebPay
-          window.location.href = result.redirectUrl
+          // Redirigir a página de éxito con los datos
+          const successUrl = `/payment-success?order_id=${orderId}&amount=${getCartGrandTotal()}&buy_order=${orderId}&token=${webpayToken}&email=${encodeURIComponent(customerEmail)}&name=${encodeURIComponent(customerName)}`;
+          window.location.href = successUrl;
         } else {
-          throw new Error(result.message || 'Error al iniciar el pago')
+          throw new Error(result.error || 'Error al iniciar el pago');
         }
       } else {
         // Simular proceso de pago para otros métodos

@@ -8,14 +8,21 @@ export default function Page() {
   useEffect(() => {
     // Verificar si hay una sesión activa
     const currentUser = localStorage.getItem('currentUser');
-    
     if (currentUser) {
-      // Si hay sesión activa, ir al home
-      console.log('✅ Sesión activa detectada, redirigiendo al home...');
-      router.push('/home');
+      try {
+        const user = JSON.parse(currentUser);
+        if (user.tipo === 'empresa') {
+          // Si es empresa, ir al home de empresa
+          router.push('/empresas/home');
+        } else {
+          // Si es usuario normal, ir al home normal
+          router.push('/home');
+        }
+      } catch {
+        router.push('/home');
+      }
     } else {
       // Si no hay sesión, ir al login
-      console.log('❌ No hay sesión activa, redirigiendo al login...');
       router.push('/login');
     }
   }, [router]);

@@ -300,12 +300,8 @@ export default function ProfilePage() {
     );
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-2xl font-semibold text-gray-600">Cargando perfil...</div>
-      </div>
-    );
+  if (loading || !user) {
+    return null;
   }
 
   return (
