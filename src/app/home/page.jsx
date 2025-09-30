@@ -15,6 +15,7 @@ export default function HomePage() {
   const [giftCards, setGiftCards] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [sortOrder, setSortOrder] = useState("default");
 
   const categories = [
     { id: "all", name: "Todas", icon: "🎁", count: 0 },
@@ -23,6 +24,7 @@ export default function HomePage() {
     { id: "entertainment", name: "Entretenimiento", icon: "🎬", count: 0 },
     { id: "travel", name: "Viajes", icon: "✈️", count: 0 },
     { id: "technology", name: "Tecnología", icon: "💻", count: 0 },
+    { id: "health", name: "Salud", icon: "🏥", count: 0 },
   ];
 
   useEffect(() => {
@@ -128,6 +130,14 @@ export default function HomePage() {
   const filteredGiftCards = giftCards.filter((card) =>
     selectedCategory === "all" || card.category === selectedCategory
   );
+
+  // Ordenar las gift cards según el filtro seleccionado
+  const sortedGiftCards = [...filteredGiftCards];
+  if (sortOrder === "asc") {
+    sortedGiftCards.sort((a, b) => a.price - b.price);
+  } else if (sortOrder === "desc") {
+    sortedGiftCards.sort((a, b) => b.price - a.price);
+  }
 
   const handleAddToCart = (giftCard) => {
     const cartItem = {
@@ -453,17 +463,32 @@ export default function HomePage() {
           </aside>
 
           <main className="flex-1">
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">
-                Todas las Gift Cards 🎁
-              </h2>
-              <p className="text-gray-600 mt-2">
-                {giftCards.length} gift cards disponibles con valores reales de BD
-              </p>
+            <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">
+                  Todas las Gift Cards 🎁
+                </h2>
+                <p className="text-gray-600 mt-2">
+                  {giftCards.length} gift cards disponibles con valores reales de BD
+                </p>
+              </div>
+              {/* Filtro de orden por precio */}
+              <div className="mt-2 md:mt-0 flex items-center">
+                <label className="mr-2 font-medium text-gray-700">Ordenar por precio:</label>
+                <select
+                  value={sortOrder}
+                  onChange={e => setSortOrder(e.target.value)}
+                  className="border border-gray-300 rounded px-3 py-1"
+                >
+                  <option value="default">Por defecto</option>
+                  <option value="asc">Menor a mayor</option>
+                  <option value="desc">Mayor a menor</option>
+                </select>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredGiftCards.map((card) => (
+              {sortedGiftCards.map((card) => (
                 <div
                   key={card.id}
                   className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow"
