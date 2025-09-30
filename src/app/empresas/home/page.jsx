@@ -50,7 +50,15 @@ export default function PerfilEmpresaLinkedIn() {
               </div>
             </div>
           <nav className="flex items-center gap-1">
-            {/* Botones Gift Cards y Admin agregados */}
+            {/* Botón Inicio al principio */}
+            <button 
+              className="flex flex-col items-center px-3 py-2 hover:bg-gray-100 rounded text-gray-700 text-xs relative"
+              onClick={() => window.location.href = "/home"}
+            >
+              <span className="text-xl mb-0.5">🏠</span>
+              <span className="font-medium">Inicio</span>
+            </button>
+            {/* Botones Gift Cards y Admin */}
             <a
               href="/gift-cards"
               className="flex flex-col items-center px-3 py-2 hover:bg-gray-100 rounded text-gray-700 text-xs relative"
@@ -65,15 +73,14 @@ export default function PerfilEmpresaLinkedIn() {
               <span className="text-xl mb-0.5">📊</span>
               <span className="font-medium">Admin</span>
             </a>
-            {/* Otros botones de navegación */}
-              {[
-                { icon: "🏠", label: "Inicio", action: () => window.location.href = "/home" },
-                { icon: "👥", label: "Mi red" },
-                { icon: "💼", label: "Empleos" },
-                { icon: "💬", label: "Mensajes", badge: 3 },
-                { icon: "🔔", label: "Notificaciones", badge: 18 },
-                { icon: "👤", label: "Yo" }
-              ].map((item, i) => (
+            {/* Otros botones de navegación, sin Empleos */}
+            {[ 
+              { icon: "👥", label: "Mi red" },
+              { icon: "💬", label: "Mensajes", badge: 3 },
+              { icon: "🔔", label: "Notificaciones", badge: 18 },
+              // Botón Yo con menú
+            ].map((item, i) => (
+              item.label !== "Yo" ? (
                 <button 
                   key={i} 
                   className="flex flex-col items-center px-3 py-2 hover:bg-gray-100 rounded text-gray-700 text-xs relative"
@@ -87,13 +94,34 @@ export default function PerfilEmpresaLinkedIn() {
                     </span>
                   )}
                 </button>
-              ))}
+              ) : null
+            ))}
+            {/* Botón Yo con menú */}
+            <div className="relative group">
+              <button
+                className="flex flex-col items-center px-3 py-2 hover:bg-gray-100 rounded text-gray-700 text-xs relative focus:outline-none"
+              >
+                <span className="text-xl mb-0.5">👤</span>
+                <span className="font-medium">Yo</span>
+              </button>
+              <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-50 opacity-0 group-hover:opacity-100 group-hover:visible invisible transition-all duration-200">
+                <button
+                  className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-t-lg"
+                  onClick={() => { localStorage.removeItem('empresaSession'); window.location.href = '/empresas'; }}
+                >
+                  Cambiar de cuenta
+                </button>
+                <button
+                  className="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 rounded-b-lg"
+                  onClick={() => { localStorage.removeItem('empresaSession'); window.location.href = '/login'; }}
+                >
+                  Cerrar sesión
+                </button>
+              </div>
+            </div>
           </nav>
-          {/* Info sesión y logout */}
-          <div className="flex items-center gap-4">
-            <div className="text-xs text-gray-700">{empresa.email}</div>
-            <button onClick={handleLogout} className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-xs font-semibold">Cerrar sesión</button>
-          </div>
+          {/* Solo botón cerrar sesión, sin correo */}
+          {/* Eliminado: botón cerrar sesión de la derecha */}
         </div>
       </header>
 
