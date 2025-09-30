@@ -50,7 +50,22 @@ export default function PerfilEmpresaLinkedIn() {
               </div>
             </div>
           <nav className="flex items-center gap-1">
-              {/* Otros botones de navegación */}
+            {/* Botones Gift Cards y Admin agregados */}
+            <a
+              href="/gift-cards"
+              className="flex flex-col items-center px-3 py-2 hover:bg-gray-100 rounded text-gray-700 text-xs relative"
+            >
+              <span className="text-xl mb-0.5">🎁</span>
+              <span className="font-medium">Gift Cards</span>
+            </a>
+            <a
+              href="/admin/orders"
+              className="flex flex-col items-center px-3 py-2 hover:bg-gray-100 rounded text-gray-700 text-xs relative"
+            >
+              <span className="text-xl mb-0.5">📊</span>
+              <span className="font-medium">Admin</span>
+            </a>
+            {/* Otros botones de navegación */}
               {[
                 { icon: "🏠", label: "Inicio", action: () => window.location.href = "/home" },
                 { icon: "👥", label: "Mi red" },

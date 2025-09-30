@@ -249,7 +249,7 @@ export default function HomePage() {
               </div>
 
               {/* Profile */}
-              // ...
+              {/* ... */}
                 <button
                   onClick={() => {
                     const currentUser = localStorage.getItem('currentUser');
@@ -301,27 +301,7 @@ export default function HomePage() {
             </div>
 
             {/* Admin Actions - Desktop */}
-            <div className="hidden xl:flex items-center space-x-3">
-              <a
-                href="/gift-cards"
-                className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 border border-slate-300 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md font-medium text-sm flex items-center space-x-2"
-              >
-                <span className="h-5 w-5 bg-slate-200 rounded flex items-center justify-center">
-                  <span className="text-xs">🎁</span>
-                </span>
-                <span>Gift Cards</span>
-              </a>
-              
-              <a
-                href="/admin/orders"
-                className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 border border-slate-300 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md font-medium text-sm flex items-center space-x-2"
-              >
-                <span className="h-5 w-5 bg-slate-200 rounded flex items-center justify-center">
-                  <span className="text-xs">📊</span>
-                </span>
-                <span>Admin</span>
-              </a>
-            </div>
+            {/* Eliminado: Gift Cards y Admin para personas */}
           </div>
 
           {/* Tab Navigation */}
