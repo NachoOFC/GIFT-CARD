@@ -1,34 +1,90 @@
 "use client";
 import { useState, useEffect } from "react";
+import dynamic from 'next/dynamic';
+
+// Cargar el componente del mapa dinámicamente (solo en el cliente)
+const MapaEmpresa = dynamic(() => import('@/components/MapaEmpresa'), {
+  ssr: false,
+  loading: () => (
+    <div className="bg-white border border-gray-300 rounded-lg overflow-hidden shadow-sm">
+      <div className="p-3 border-b border-gray-300">
+        <h3 className="text-sm font-semibold text-gray-900">📍 Ubicación</h3>
+      </div>
+      <div className="h-64 bg-gray-100 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    </div>
+  )
+});
 
 export default function PerfilEmpresaLinkedIn() {
   const [activeTab, setActiveTab] = useState("inicio");
-
   const [empresa, setEmpresa] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const empresaSession = localStorage.getItem('empresaSession');
-    if (empresaSession) {
-      setEmpresa(JSON.parse(empresaSession));
-    } else {
-      setEmpresa(null);
-    }
+    const cargarDatosEmpresa = async () => {
+      try {
+        const empresaSession = localStorage.getItem('empresaSession');
+        
+        if (!empresaSession) {
+          window.location.href = "/empresas/login";
+          return;
+        }
+
+        const sessionData = JSON.parse(empresaSession);
+        
+        // Obtener datos completos desde la base de datos
+        const response = await fetch(`/api/empresas/perfil?id=${sessionData.id}`);
+        const result = await response.json();
+
+        if (result.success) {
+          // Combinar datos de la sesión con los de la BD
+          const empresaCompleta = {
+            ...result.data,
+            // Valores por defecto para campos de UI
+            portada: result.data.logo_url || "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=1200&h=400&fit=crop",
+            logo: result.data.logo_url || "https://via.placeholder.com/160",
+            slogan: `Empresa líder en ${result.data.ciudad || 'Chile'}`,
+            seguidores: result.data.estadisticas?.seguidores || 0,
+            visitasDelPerfil: result.data.estadisticas?.visitasDelPerfil || 0,
+            impresionesGiftCards: result.data.estadisticas?.impresionesGiftCards || 0
+          };
+          
+          setEmpresa(empresaCompleta);
+        } else {
+          console.error('Error al cargar perfil:', result.message);
+          window.location.href = "/empresas/login";
+        }
+      } catch (error) {
+        console.error('Error al cargar datos de empresa:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    cargarDatosEmpresa();
   }, []);
 
   const handleLogout = () => {
-  localStorage.removeItem('empresaSession');
-  window.location.href = '/empresas'; // Pantalla de selección login/registro
+    localStorage.removeItem('empresaSession');
+    window.location.href = '/empresas';
   };
 
-    if (!empresa) {
-      // Solo redirigir si realmente no existe la sesión en localStorage
-      if (typeof window !== "undefined" && !localStorage.getItem('empresaSession')) {
-        window.location.href = "/empresas/login";
-        return null;
-      }
-      // Si existe la sesión pero el estado aún no está cargado, espera a que se cargue
-      return null;
-    }
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Cargando perfil de empresa...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!empresa) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -156,12 +212,17 @@ export default function PerfilEmpresaLinkedIn() {
                   </div>
                   <p className="text-base text-gray-700 mb-2">{empresa.slogan}</p>
                   <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
-                    <span>{empresa.direccion}</span>
+                    <span>{empresa.direccion || empresa.ciudad}, {empresa.region}</span>
                     <span>•</span>
-                    <a href="#" className="text-blue-600 font-medium hover:underline">{empresa.email}</a>
+                    <a href={`mailto:${empresa.email}`} className="text-blue-600 font-medium hover:underline">{empresa.email}</a>
                   </div>
+                  {empresa.telefono && (
+                    <div className="text-sm text-gray-600 mb-1">
+                      <span>📞 {empresa.telefono}</span>
+                    </div>
+                  )}
                   <div className="text-sm text-gray-600">
-                    <a href="#" className="text-blue-600 font-medium hover:underline">{empresa.seguidores} seguidores</a>
+                    <span className="text-blue-600 font-medium">{empresa.seguidores} seguidores</span>
                   </div>
                 </div>
               </div>
@@ -197,14 +258,14 @@ export default function PerfilEmpresaLinkedIn() {
                     <span>👤</span>
                     <span>Visitas del perfil</span>
                   </div>
-                  <div className="font-semibold text-gray-900 mt-1">234</div>
+                  <div className="font-semibold text-gray-900 mt-1">{empresa.visitasDelPerfil}</div>
                 </button>
                 <button className="w-full text-left hover:bg-gray-50 -mx-3 px-3 py-2">
                   <div className="flex items-center gap-2 text-sm text-gray-700">
                     <span>📊</span>
                     <span>Impresiones de gift cards</span>
                   </div>
-                  <div className="font-semibold text-gray-900 mt-1">1,456</div>
+                  <div className="font-semibold text-gray-900 mt-1">{empresa.impresionesGiftCards}</div>
                 </button>
               </div>
             </div>
@@ -224,6 +285,14 @@ export default function PerfilEmpresaLinkedIn() {
                 </button>
               </div>
             </div>
+
+            {/* Mapa de Ubicación */}
+            <MapaEmpresa 
+              direccion={empresa.direccion}
+              ciudad={empresa.ciudad}
+              region={empresa.region}
+              nombre={empresa.nombre}
+            />
           </aside>
 
           {/* Columna central */}
@@ -331,6 +400,39 @@ export default function PerfilEmpresaLinkedIn() {
 
           {/* Columna derecha */}
           <aside className="col-span-3 space-y-2">
+            {/* Información de la Empresa */}
+            <div className="bg-white border border-gray-300 rounded-lg p-3 shadow-sm">
+              <h3 className="text-sm font-semibold text-gray-900 mb-3">Información de la Empresa</h3>
+              <div className="space-y-2 text-xs">
+                <div>
+                  <span className="text-gray-600">RUT:</span>
+                  <p className="text-gray-900 font-medium">{empresa.rut}</p>
+                </div>
+                <div>
+                  <span className="text-gray-600">País:</span>
+                  <p className="text-gray-900 font-medium">{empresa.pais}</p>
+                </div>
+                {empresa.contacto_nombre && (
+                  <div>
+                    <span className="text-gray-600">Contacto:</span>
+                    <p className="text-gray-900 font-medium">{empresa.contacto_nombre}</p>
+                    {empresa.contacto_email && (
+                      <p className="text-blue-600 hover:underline">{empresa.contacto_email}</p>
+                    )}
+                  </div>
+                )}
+                <div>
+                  <span className="text-gray-600">Miembro desde:</span>
+                  <p className="text-gray-900 font-medium">
+                    {new Date(empresa.fecha_registro).toLocaleDateString('es-ES', { 
+                      year: 'numeric', 
+                      month: 'long' 
+                    })}
+                  </p>
+                </div>
+              </div>
+            </div>
+
             {/* Idioma */}
             <div className="bg-white border border-gray-300 rounded-lg p-3 shadow-sm">
               <div className="flex items-center justify-between mb-1">
