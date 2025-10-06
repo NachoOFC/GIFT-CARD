@@ -2,6 +2,9 @@
 import { useState, useEffect } from "react";
 import dynamic from 'next/dynamic';
 import ModalEditarImagen from '@/components/empresas/ModalEditarImagen';
+import ModalEditarRedes from '@/components/empresas/ModalEditarRedes';
+import ModalEditarInformacion from '@/components/empresas/ModalEditarInformacion';
+import ModalEditarDescripcion from '@/components/empresas/ModalEditarDescripcion';
 
 // Cargar el componente del mapa dinámicamente (solo en el cliente)
 const MapaEmpresa = dynamic(() => import('@/components/MapaEmpresa'), {
@@ -24,6 +27,10 @@ export default function PerfilEmpresaLinkedIn() {
   const [loading, setLoading] = useState(true);
   const [modalEditarPortada, setModalEditarPortada] = useState(false);
   const [modalEditarLogo, setModalEditarLogo] = useState(false);
+  const [modalEditarRedes, setModalEditarRedes] = useState(false);
+  const [modalEditarInformacion, setModalEditarInformacion] = useState(false);
+  const [modalEditarDescripcion, setModalEditarDescripcion] = useState(false);
+  const [mostrarDescripcionCompleta, setMostrarDescripcionCompleta] = useState(false);
 
   useEffect(() => {
     const cargarDatosEmpresa = async () => {
@@ -48,7 +55,7 @@ export default function PerfilEmpresaLinkedIn() {
             // Valores por defecto para campos de UI
             portada: result.data.portada_url || result.data.logo_url || "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=1200&h=400&fit=crop",
             logo: result.data.logo_url || "https://via.placeholder.com/160",
-            slogan: `Empresa líder en ${result.data.ciudad || 'Chile'}`,
+            slogan: result.data.slogan || `Empresa líder en ${result.data.ciudad || 'Chile'}`,
             seguidores: result.data.estadisticas?.seguidores || 0,
             visitasDelPerfil: result.data.estadisticas?.visitasDelPerfil || 0,
             impresionesGiftCards: result.data.estadisticas?.impresionesGiftCards || 0
@@ -97,7 +104,7 @@ export default function PerfilEmpresaLinkedIn() {
           ...result.data,
           portada: result.data.portada_url || result.data.logo_url || "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=1200&h=400&fit=crop",
           logo: result.data.logo_url || "https://via.placeholder.com/160",
-          slogan: `Empresa líder en ${result.data.ciudad || 'Chile'}`,
+          slogan: result.data.slogan || `Empresa líder en ${result.data.ciudad || 'Chile'}`,
           seguidores: result.data.estadisticas?.seguidores || 0,
           visitasDelPerfil: result.data.estadisticas?.visitasDelPerfil || 0,
           impresionesGiftCards: result.data.estadisticas?.impresionesGiftCards || 0
@@ -107,6 +114,40 @@ export default function PerfilEmpresaLinkedIn() {
     } catch (error) {
       console.error('Error recargando datos:', error);
     }
+  };
+
+  const handleRedesActualizadas = (nuevasRedes) => {
+    setEmpresa(prev => ({
+      ...prev,
+      ...nuevasRedes
+    }));
+  };
+
+  const handleDescripcionActualizada = (nuevaInfo) => {
+    setEmpresa(prev => ({
+      ...prev,
+      nombre: nuevaInfo.nombre,
+      slogan: nuevaInfo.descripcion
+    }));
+
+    // Actualizar también en localStorage
+    const empresaSession = JSON.parse(localStorage.getItem('empresaSession'));
+    empresaSession.nombre = nuevaInfo.nombre;
+    localStorage.setItem('empresaSession', JSON.stringify(empresaSession));
+  };
+
+  const handleInformacionActualizada = (nuevaInfo) => {
+    setEmpresa(prev => ({
+      ...prev,
+      direccion: nuevaInfo.direccion,
+      ciudad: nuevaInfo.ciudad,
+      region: nuevaInfo.region,
+      pais: nuevaInfo.pais,
+      telefono: nuevaInfo.telefono,
+      email: nuevaInfo.email,
+      contacto_nombre: nuevaInfo.contacto_nombre,
+      contacto_email: nuevaInfo.contacto_email
+    }));
   };
 
   if (loading) {
@@ -197,79 +238,214 @@ export default function PerfilEmpresaLinkedIn() {
       </header>
 
       {/* Contenedor principal */}
-      <div className="max-w-screen-xl mx-auto px-6 pt-6">
-        {/* Portada - Tarjeta blanca */}
-        <div className="bg-white rounded-t-lg overflow-hidden shadow-sm mb-2">
-          <div className="relative h-52 bg-gradient-to-br from-blue-700 via-purple-600 to-indigo-900 overflow-hidden group">
+      <div className="max-w-[1128px] mx-auto px-6 pt-6">
+        {/* Tarjeta principal estilo LinkedIn */}
+        <div className="bg-white rounded-lg overflow-hidden shadow border border-gray-300 mb-2">
+          {/* Portada */}
+          <div className="relative h-[201px] bg-gradient-to-br from-blue-700 via-blue-600 to-indigo-700 overflow-hidden group">
             <img 
               src={empresa.portada} 
-              alt="Portada" 
-              className="w-full h-full object-cover opacity-60 group-hover:opacity-70 transition-opacity duration-300" 
+              alt="Imagen de fondo" 
+              className="w-full h-full object-cover" 
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
             <button 
               onClick={() => setModalEditarPortada(true)}
-              className="absolute bottom-4 right-4 bg-white/90 backdrop-blur-sm hover:bg-white rounded-full px-4 py-2 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center gap-2 group-hover:bg-blue-600 group-hover:text-white"
+              className="absolute top-4 right-4 bg-white hover:bg-gray-50 rounded-full p-2 shadow transition-all"
+              aria-label="Editar fondo"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+              <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
               </svg>
-              <span className="font-semibold text-sm">Editar portada</span>
             </button>
           </div>
           
-          <div className="px-6 pb-4">
-            <div className="flex justify-between items-start">
-              <div className="flex gap-6 items-end" style={{ marginTop: '-60px' }}>
-                <div className="relative group">
+          {/* Sección de perfil */}
+          <div className="px-5 pb-3">
+            {/* Logo y toda la información al lado */}
+            <div className="flex items-start gap-6" style={{ marginTop: '-72px' }}>
+              {/* Logo */}
+              <div className="relative group flex-shrink-0">
+                <div className="w-[160px] h-[160px] rounded-full bg-white border-4 border-white shadow-lg overflow-hidden">
                   <img 
                     src={empresa.logo} 
-                    alt="Logo" 
-                    className="w-40 h-40 rounded-2xl bg-white border-4 border-white shadow-xl object-cover group-hover:shadow-2xl transition-shadow duration-300"
+                    alt={empresa.nombre}
+                    className="w-full h-full object-cover"
                   />
-                  <button 
-                    onClick={() => setModalEditarLogo(true)}
-                    className="absolute bottom-2 right-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full p-2.5 shadow-lg hover:shadow-xl transform hover:scale-110 transition-all duration-200 opacity-0 group-hover:opacity-100"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                  </button>
                 </div>
-                <div className="pb-2">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h1 className="text-2xl font-bold text-gray-900">{empresa.nombre}</h1>
-                    <span className="text-blue-600">✓</span>
+                <button 
+                  onClick={() => setModalEditarLogo(true)}
+                  className="absolute bottom-2 right-2 bg-white hover:bg-gray-50 rounded-full p-1.5 shadow opacity-0 group-hover:opacity-100 transition-all"
+                  aria-label="Actualizar logo"
+                >
+                  <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Información de la empresa - Al lado del logo */}
+              <div className="flex-1 pt-20">
+                {/* Nombre y botones editar */}
+                <div className="flex items-start justify-between mb-2">
+                  <div>
+                    <div className="flex items-center gap-1 mb-1">
+                      <h1 className="text-2xl font-bold text-gray-900 leading-tight">
+                        {empresa.nombre}
+                      </h1>
+                      {/* Icono de verificado */}
+                      <img 
+                        src="/verificado.png" 
+                        alt="Verificado" 
+                        className="w-7 h-7"
+                      />
+                    </div>
+                    {/* Descripción justo debajo del nombre */}
+                    {empresa.slogan && (
+                      <p className="text-sm text-gray-600 leading-relaxed">
+                        {empresa.slogan}
+                      </p>
+                    )}
                   </div>
-                  <p className="text-base text-gray-700 mb-2">{empresa.slogan}</p>
-                  <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
-                    <span>{empresa.direccion || empresa.ciudad}, {empresa.region}</span>
-                    <span>•</span>
-                    <a href={`mailto:${empresa.email}`} className="text-blue-600 font-medium hover:underline">{empresa.email}</a>
+                  
+                  {/* Botones de editar */}
+                  <div className="flex items-center gap-2">
+                    {/* Botón de editar presentación */}
+                    <button
+                      onClick={() => setModalEditarDescripcion(true)}
+                      className="p-2 hover:bg-gray-100 rounded-full transition-all"
+                      aria-label="Editar presentación"
+                      title="Editar nombre y descripción"
+                    >
+                      <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                      </svg>
+                    </button>
+                    
+                    {/* Botón de editar enlaces/redes */}
+                    <button
+                      onClick={() => setModalEditarRedes(true)}
+                      className="p-2 hover:bg-gray-100 rounded-full transition-all"
+                      aria-label="Editar enlaces"
+                      title="Editar redes sociales y enlaces"
+                    >
+                      <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                      </svg>
+                    </button>
                   </div>
-                  {empresa.telefono && (
-                    <div className="text-sm text-gray-600 mb-1">
-                      <span>📞 {empresa.telefono}</span>
+                </div>
+
+                {/* Seguidores y Redes Sociales */}
+                <div className="flex items-center justify-start gap-6 mt-4 pt-3 border-t border-gray-200">
+                  {/* Seguidores */}
+                  <div className="flex items-center gap-2">
+                    <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                    <span className="text-base font-semibold text-gray-900">
+                      {empresa.seguidores}
+                    </span>
+                    <span className="text-sm text-gray-600">seguidores</span>
+                  </div>
+
+                  {/* Redes Sociales */}
+                  {(empresa.sitio_web || empresa.facebook || empresa.instagram || empresa.twitter || empresa.linkedin || empresa.youtube || empresa.tiktok) && (
+                    <div className="flex items-center gap-2">
+                      {empresa.sitio_web && (
+                        <a 
+                          href={empresa.sitio_web.startsWith('http') ? empresa.sitio_web : `https://${empresa.sitio_web}`} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-all hover:scale-110" 
+                          title="Sitio Web"
+                        >
+                          <svg className="w-5 h-5 text-gray-700" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+                          </svg>
+                        </a>
+                      )}
+                      {empresa.facebook && (
+                        <a 
+                          href={empresa.facebook.startsWith('http') ? empresa.facebook : `https://${empresa.facebook}`} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="w-8 h-8 rounded-full bg-[#1877F2] hover:bg-[#0C63D4] flex items-center justify-center transition-all hover:scale-110" 
+                          title="Facebook"
+                        >
+                          <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                          </svg>
+                        </a>
+                      )}
+                      {empresa.instagram && (
+                        <a 
+                          href={empresa.instagram.startsWith('http') ? empresa.instagram : `https://${empresa.instagram}`} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#FEDA75] via-[#FA7E1E] to-[#D62976] hover:opacity-90 flex items-center justify-center transition-all hover:scale-110" 
+                          title="Instagram"
+                        >
+                          <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                          </svg>
+                        </a>
+                      )}
+                      {empresa.twitter && (
+                        <a 
+                          href={empresa.twitter.startsWith('http') ? empresa.twitter : `https://${empresa.twitter}`} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="w-8 h-8 rounded-full bg-black hover:bg-gray-800 flex items-center justify-center transition-all hover:scale-110" 
+                          title="X (Twitter)"
+                        >
+                          <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                          </svg>
+                        </a>
+                      )}
+                      {empresa.linkedin && (
+                        <a 
+                          href={empresa.linkedin.startsWith('http') ? empresa.linkedin : `https://${empresa.linkedin}`} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="w-8 h-8 rounded-full bg-[#0A66C2] hover:bg-[#004182] flex items-center justify-center transition-all hover:scale-110" 
+                          title="LinkedIn"
+                        >
+                          <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                          </svg>
+                        </a>
+                      )}
+                      {empresa.youtube && (
+                        <a 
+                          href={empresa.youtube.startsWith('http') ? empresa.youtube : `https://${empresa.youtube}`} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="w-8 h-8 rounded-full bg-[#FF0000] hover:bg-[#CC0000] flex items-center justify-center transition-all hover:scale-110" 
+                          title="YouTube"
+                        >
+                          <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                          </svg>
+                        </a>
+                      )}
+                      {empresa.tiktok && (
+                        <a 
+                          href={empresa.tiktok.startsWith('http') ? empresa.tiktok : `https://${empresa.tiktok}`} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="w-8 h-8 rounded-full bg-black hover:bg-gray-800 flex items-center justify-center transition-all hover:scale-110" 
+                          title="TikTok"
+                        >
+                          <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
+                          </svg>
+                        </a>
+                      )}
                     </div>
                   )}
-                  <div className="text-sm text-gray-600">
-                    <span className="text-blue-600 font-medium">{empresa.seguidores} seguidores</span>
-                  </div>
                 </div>
-              </div>
-              
-              <div className="flex gap-2 mt-4">
-                <button className="px-4 py-1.5 bg-blue-600 text-white rounded-full font-semibold hover:bg-blue-700 text-sm">
-                  Tengo interés en...
-                </button>
-                <button className="px-4 py-1.5 border-2 border-blue-600 text-blue-600 rounded-full font-semibold hover:bg-blue-50 text-sm">
-                  Añadir sección
-                </button>
-                <button className="px-4 py-1.5 border border-gray-600 text-gray-600 rounded-full font-semibold hover:bg-gray-50 text-sm">
-                  Más
-                </button>
               </div>
             </div>
           </div>
@@ -279,6 +455,61 @@ export default function PerfilEmpresaLinkedIn() {
         <div className="grid grid-cols-12 gap-6 pb-6">
           {/* Columna izquierda */}
           <aside className="col-span-3 space-y-2">
+            {/* Información de Contacto */}
+            <div className="bg-white border border-gray-300 rounded-lg overflow-hidden shadow-sm">
+              <div className="p-3 border-b border-gray-300 flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-900">Información de Contacto</h3>
+                  <p className="text-xs text-gray-600 mt-0.5">👁️ Solo para ti</p>
+                </div>
+                <button 
+                  onClick={() => setModalEditarInformacion(true)}
+                  className="text-gray-600 hover:text-blue-600 transition-colors"
+                  title="Editar información"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                  </svg>
+                </button>
+              </div>
+              <div className="p-3 space-y-2 text-xs">
+                {/* Ubicación */}
+                <div className="flex items-start gap-2 text-gray-700">
+                  <svg className="w-4 h-4 text-gray-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd"/>
+                  </svg>
+                  <div>
+                    <div className="font-medium">{empresa.direccion || empresa.ciudad}</div>
+                    <div className="text-gray-600">{empresa.region}, {empresa.pais || 'Chile'}</div>
+                  </div>
+                </div>
+
+                {/* Email */}
+                <div className="flex items-center gap-2">
+                  <svg className="w-4 h-4 text-gray-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
+                    <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
+                  </svg>
+                  <a 
+                    href={`mailto:${empresa.email}`} 
+                    className="text-blue-600 hover:underline font-medium break-all"
+                  >
+                    {empresa.email}
+                  </a>
+                </div>
+
+                {/* Teléfono */}
+                {empresa.telefono && (
+                  <div className="flex items-center gap-2 text-gray-700">
+                    <svg className="w-4 h-4 text-gray-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"/>
+                    </svg>
+                    <span className="font-medium">{empresa.telefono}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
             {/* Análisis */}
             <div className="bg-white border border-gray-300 rounded-lg overflow-hidden shadow-sm">
               <div className="p-3 border-b border-gray-300">
@@ -321,6 +552,7 @@ export default function PerfilEmpresaLinkedIn() {
 
             {/* Mapa de Ubicación */}
             <MapaEmpresa 
+              key={`${empresa.direccion}-${empresa.ciudad}-${empresa.region}`}
               direccion={empresa.direccion}
               ciudad={empresa.ciudad}
               region={empresa.region}
@@ -546,6 +778,39 @@ export default function PerfilEmpresaLinkedIn() {
         empresaId={empresa?.id}
         currentImage={empresa?.logo}
         onImageUpdated={(url) => handleImagenActualizada(url, 'logo')}
+      />
+
+      <ModalEditarRedes
+        isOpen={modalEditarRedes}
+        onClose={() => setModalEditarRedes(false)}
+        empresaId={empresa?.id}
+        redesActuales={{
+          sitio_web: empresa?.sitio_web,
+          facebook: empresa?.facebook,
+          instagram: empresa?.instagram,
+          twitter: empresa?.twitter,
+          linkedin: empresa?.linkedin,
+          youtube: empresa?.youtube,
+          tiktok: empresa?.tiktok
+        }}
+        onRedesActualizadas={handleRedesActualizadas}
+      />
+
+      <ModalEditarInformacion
+        isOpen={modalEditarInformacion}
+        onClose={() => setModalEditarInformacion(false)}
+        empresaId={empresa?.id}
+        informacionActual={empresa}
+        onInformacionActualizada={handleInformacionActualizada}
+      />
+
+      <ModalEditarDescripcion
+        isOpen={modalEditarDescripcion}
+        onClose={() => setModalEditarDescripcion(false)}
+        empresaId={empresa?.id}
+        nombreActual={empresa?.nombre}
+        descripcionActual={empresa?.slogan}
+        onDescripcionActualizada={handleDescripcionActualizada}
       />
     </div>
   );

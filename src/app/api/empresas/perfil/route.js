@@ -27,6 +27,14 @@ export async function GET(request) {
         servicio_contacto,
         logo_url,
         portada_url,
+        slogan,
+        sitio_web,
+        facebook,
+        instagram,
+        twitter,
+        linkedin,
+        youtube,
+        tiktok,
         fecha_registro,
         estado
       FROM empresas 
