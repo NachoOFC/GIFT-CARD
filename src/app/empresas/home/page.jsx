@@ -129,30 +129,24 @@ export default function PerfilEmpresaLinkedIn() {
       {/* Header fijo */}
       <header className="bg-white border-b border-gray-300 sticky top-0 z-50">
         <div className="max-w-screen-xl mx-auto px-6 h-14 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              {/* Logo y buscador */}
-              <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center text-white font-bold">
-                in
-              </div>
-              <div className="relative">
-                <input 
-                  type="text" 
-                  placeholder="Buscar" 
-                  className="w-64 h-9 pl-10 pr-4 bg-blue-50 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
-                />
-                <span className="absolute left-3 top-2 text-gray-600">🔍</span>
-              </div>
+            {/* Logo */}
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center text-white font-bold">
+              in
             </div>
+            <span className="text-lg font-semibold text-gray-800">{empresa.nombre}</span>
+          </div>
+
+          {/* Navegación */}
           <nav className="flex items-center gap-1">
-            {/* Botón Inicio al principio */}
-            <button 
+            <button
               className="flex flex-col items-center px-3 py-2 hover:bg-gray-100 rounded text-gray-700 text-xs relative"
               onClick={() => window.location.href = "/home"}
             >
               <span className="text-xl mb-0.5">🏠</span>
               <span className="font-medium">Inicio</span>
             </button>
-            {/* Botones Gift Cards y Admin */}
+
             <a
               href="/gift-cards"
               className="flex flex-col items-center px-3 py-2 hover:bg-gray-100 rounded text-gray-700 text-xs relative"
@@ -160,6 +154,7 @@ export default function PerfilEmpresaLinkedIn() {
               <span className="text-xl mb-0.5">🎁</span>
               <span className="font-medium">Gift Cards</span>
             </a>
+
             <a
               href="/admin/orders"
               className="flex flex-col items-center px-3 py-2 hover:bg-gray-100 rounded text-gray-700 text-xs relative"
@@ -167,55 +162,37 @@ export default function PerfilEmpresaLinkedIn() {
               <span className="text-xl mb-0.5">📊</span>
               <span className="font-medium">Admin</span>
             </a>
-            {/* Otros botones de navegación, sin Empleos */}
-            {[ 
-              { icon: "👥", label: "Mi red" },
-              { icon: "💬", label: "Mensajes", badge: 3 },
-              { icon: "🔔", label: "Notificaciones", badge: 18 },
-              // Botón Yo con menú
-            ].map((item, i) => (
-              item.label !== "Yo" ? (
-                <button 
-                  key={i} 
-                  className="flex flex-col items-center px-3 py-2 hover:bg-gray-100 rounded text-gray-700 text-xs relative"
-                  onClick={item.action}
-                >
-                  <span className="text-xl mb-0.5">{item.icon}</span>
-                  <span className="font-medium">{item.label}</span>
-                  {item.badge && (
-                    <span className="absolute top-1 right-1 bg-red-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
-                      {item.badge}
-                    </span>
-                  )}
-                </button>
-              ) : null
-            ))}
-            {/* Botón Yo con menú */}
-            <div className="relative group">
-              <button
-                className="flex flex-col items-center px-3 py-2 hover:bg-gray-100 rounded text-gray-700 text-xs relative focus:outline-none"
-              >
-                <span className="text-xl mb-0.5">👤</span>
-                <span className="font-medium">Yo</span>
-              </button>
-              <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-50 opacity-0 group-hover:opacity-100 group-hover:visible invisible transition-all duration-200">
-                <button
-                  className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-t-lg"
-                  onClick={() => { localStorage.removeItem('empresaSession'); window.location.href = '/empresas'; }}
-                >
-                  Cambiar de cuenta
-                </button>
-                <button
-                  className="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 rounded-b-lg"
-                  onClick={() => { localStorage.removeItem('empresaSession'); window.location.href = '/login'; }}
-                >
-                  Cerrar sesión
-                </button>
-              </div>
-            </div>
+
+            <button 
+              className="flex flex-col items-center px-3 py-2 hover:bg-gray-100 rounded text-gray-700 text-xs relative"
+            >
+              <span className="text-xl mb-0.5">💬</span>
+              <span className="font-medium">Mensajes</span>
+              <span className="absolute top-1 right-1 bg-red-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                3
+              </span>
+            </button>
+
+            <button 
+              className="flex flex-col items-center px-3 py-2 hover:bg-gray-100 rounded text-gray-700 text-xs relative"
+            >
+              <svg className="w-5 h-5 mb-0.5" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"/>
+              </svg>
+              <span className="font-medium">Notificaciones</span>
+              <span className="absolute top-1 right-1 bg-red-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                18
+              </span>
+            </button>
+
+            {/* Botón Cerrar Sesión */}
+            <button
+              onClick={handleLogout}
+              className="ml-4 px-4 py-2 bg-red-600 text-white rounded-full text-xs font-semibold hover:bg-red-700 transition-all"
+            >
+              Cerrar sesión
+            </button>
           </nav>
-          {/* Solo botón cerrar sesión, sin correo */}
-          {/* Eliminado: botón cerrar sesión de la derecha */}
         </div>
       </header>
 
