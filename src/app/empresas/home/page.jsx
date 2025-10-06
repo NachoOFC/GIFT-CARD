@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import dynamic from 'next/dynamic';
+import ModalEditarImagen from '@/components/empresas/ModalEditarImagen';
 
 // Cargar el componente del mapa dinámicamente (solo en el cliente)
 const MapaEmpresa = dynamic(() => import('@/components/MapaEmpresa'), {
@@ -21,6 +22,8 @@ export default function PerfilEmpresaLinkedIn() {
   const [activeTab, setActiveTab] = useState("inicio");
   const [empresa, setEmpresa] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [modalEditarPortada, setModalEditarPortada] = useState(false);
+  const [modalEditarLogo, setModalEditarLogo] = useState(false);
 
   useEffect(() => {
     const cargarDatosEmpresa = async () => {
@@ -69,6 +72,18 @@ export default function PerfilEmpresaLinkedIn() {
   const handleLogout = () => {
     localStorage.removeItem('empresaSession');
     window.location.href = '/empresas';
+  };
+
+  const handleImagenActualizada = (nuevaUrl, tipo) => {
+    setEmpresa(prev => ({
+      ...prev,
+      [tipo === 'logo' ? 'logo' : 'portada']: nuevaUrl
+    }));
+    
+    // Actualizar también en localStorage
+    const empresaSession = JSON.parse(localStorage.getItem('empresaSession'));
+    empresaSession[tipo === 'logo' ? 'logo_url' : 'portada_url'] = nuevaUrl;
+    localStorage.setItem('empresaSession', JSON.stringify(empresaSession));
   };
 
   if (loading) {
@@ -185,24 +200,42 @@ export default function PerfilEmpresaLinkedIn() {
       <div className="max-w-screen-xl mx-auto px-6 pt-6">
         {/* Portada - Tarjeta blanca */}
         <div className="bg-white rounded-t-lg overflow-hidden shadow-sm mb-2">
-          <div className="relative h-52 bg-gradient-to-br from-blue-700 to-indigo-900 overflow-hidden">
-            <img src={empresa.portada} alt="Portada" className="w-full h-full object-cover opacity-40" />
-            <button className="absolute bottom-4 right-4 bg-white rounded-full p-2 hover:bg-gray-100 shadow-lg">
-              <span className="text-blue-600 text-xl">✏️</span>
+          <div className="relative h-52 bg-gradient-to-br from-blue-700 via-purple-600 to-indigo-900 overflow-hidden group">
+            <img 
+              src={empresa.portada} 
+              alt="Portada" 
+              className="w-full h-full object-cover opacity-60 group-hover:opacity-70 transition-opacity duration-300" 
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+            <button 
+              onClick={() => setModalEditarPortada(true)}
+              className="absolute bottom-4 right-4 bg-white/90 backdrop-blur-sm hover:bg-white rounded-full px-4 py-2 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center gap-2 group-hover:bg-blue-600 group-hover:text-white"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              <span className="font-semibold text-sm">Editar portada</span>
             </button>
           </div>
           
           <div className="px-6 pb-4">
             <div className="flex justify-between items-start">
               <div className="flex gap-6 items-end" style={{ marginTop: '-60px' }}>
-                <div className="relative">
+                <div className="relative group">
                   <img 
                     src={empresa.logo} 
                     alt="Logo" 
-                    className="w-40 h-40 rounded-lg bg-white border-4 border-white shadow-xl object-cover"
+                    className="w-40 h-40 rounded-2xl bg-white border-4 border-white shadow-xl object-cover group-hover:shadow-2xl transition-shadow duration-300"
                   />
-                  <button className="absolute bottom-2 right-2 bg-white rounded-full p-1.5 shadow-md hover:bg-gray-100">
-                    <span className="text-blue-600">📷</span>
+                  <button 
+                    onClick={() => setModalEditarLogo(true)}
+                    className="absolute bottom-2 right-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full p-2.5 shadow-lg hover:shadow-xl transform hover:scale-110 transition-all duration-200 opacity-0 group-hover:opacity-100"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
                   </button>
                 </div>
                 <div className="pb-2">
@@ -495,6 +528,25 @@ export default function PerfilEmpresaLinkedIn() {
           </aside>
         </div>
       </div>
+
+      {/* Modales de edición */}
+      <ModalEditarImagen
+        isOpen={modalEditarPortada}
+        onClose={() => setModalEditarPortada(false)}
+        tipo="portada"
+        empresaId={empresa?.id}
+        currentImage={empresa?.portada}
+        onImageUpdated={(url) => handleImagenActualizada(url, 'portada')}
+      />
+
+      <ModalEditarImagen
+        isOpen={modalEditarLogo}
+        onClose={() => setModalEditarLogo(false)}
+        tipo="logo"
+        empresaId={empresa?.id}
+        currentImage={empresa?.logo}
+        onImageUpdated={(url) => handleImagenActualizada(url, 'logo')}
+      />
     </div>
   );
 }

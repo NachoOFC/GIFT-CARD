@@ -9,7 +9,10 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@cloudinary/react": "^1.14.3",
+    "@cloudinary/url-gen": "^1.22.0",
     "axios": "^1.11.0",
+    "cloudinary": "^2.7.0",
     "dotenv": "^17.2.2",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.541.0",
