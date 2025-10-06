@@ -26,6 +26,7 @@ export async function GET(request) {
         contacto_telefono,
         servicio_contacto,
         logo_url,
+        portada_url,
         fecha_registro,
         estado
       FROM empresas 

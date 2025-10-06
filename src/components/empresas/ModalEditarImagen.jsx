@@ -108,7 +108,8 @@ export default function ModalEditarImagen({
         });
 
         if (updateResponse.ok) {
-          onImageUpdated(result.imageUrl);
+          // Pasar la URL Y el tipo al callback
+          onImageUpdated(result.imageUrl, tipo);
           
           // Pequeño delay para que se vea el progreso completo
           setTimeout(() => {

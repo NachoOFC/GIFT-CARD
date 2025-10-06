@@ -46,7 +46,7 @@ export default function PerfilEmpresaLinkedIn() {
           const empresaCompleta = {
             ...result.data,
             // Valores por defecto para campos de UI
-            portada: result.data.logo_url || "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=1200&h=400&fit=crop",
+            portada: result.data.portada_url || result.data.logo_url || "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=1200&h=400&fit=crop",
             logo: result.data.logo_url || "https://via.placeholder.com/160",
             slogan: `Empresa líder en ${result.data.ciudad || 'Chile'}`,
             seguidores: result.data.estadisticas?.seguidores || 0,
@@ -74,16 +74,39 @@ export default function PerfilEmpresaLinkedIn() {
     window.location.href = '/empresas';
   };
 
-  const handleImagenActualizada = (nuevaUrl, tipo) => {
+  const handleImagenActualizada = async (nuevaUrl, tipo) => {
+    // Actualizar estado local inmediatamente
     setEmpresa(prev => ({
       ...prev,
-      [tipo === 'logo' ? 'logo' : 'portada']: nuevaUrl
+      [tipo === 'logo' ? 'logo' : 'portada']: nuevaUrl,
+      [tipo === 'logo' ? 'logo_url' : 'portada_url']: nuevaUrl
     }));
     
     // Actualizar también en localStorage
     const empresaSession = JSON.parse(localStorage.getItem('empresaSession'));
     empresaSession[tipo === 'logo' ? 'logo_url' : 'portada_url'] = nuevaUrl;
     localStorage.setItem('empresaSession', JSON.stringify(empresaSession));
+
+    // Recargar datos desde la BD para asegurar sincronización
+    try {
+      const response = await fetch(`/api/empresas/perfil?id=${empresaSession.id}`);
+      const result = await response.json();
+      
+      if (result.success) {
+        const empresaCompleta = {
+          ...result.data,
+          portada: result.data.portada_url || result.data.logo_url || "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=1200&h=400&fit=crop",
+          logo: result.data.logo_url || "https://via.placeholder.com/160",
+          slogan: `Empresa líder en ${result.data.ciudad || 'Chile'}`,
+          seguidores: result.data.estadisticas?.seguidores || 0,
+          visitasDelPerfil: result.data.estadisticas?.visitasDelPerfil || 0,
+          impresionesGiftCards: result.data.estadisticas?.impresionesGiftCards || 0
+        };
+        setEmpresa(empresaCompleta);
+      }
+    } catch (error) {
+      console.error('Error recargando datos:', error);
+    }
   };
 
   if (loading) {
