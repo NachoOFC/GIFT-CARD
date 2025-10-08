@@ -16,6 +16,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [sortOrder, setSortOrder] = useState("default");
+  const [empresasPartners, setEmpresasPartners] = useState([]);
 
   const categories = [
     { id: "all", name: "Todas", icon: "🎁", count: 0 },
@@ -30,7 +31,33 @@ export default function HomePage() {
   useEffect(() => {
     fetchGiftCards();
     fetchUserBalance();
+    fetchEmpresasPartners();
   }, []);
+
+  const fetchEmpresasPartners = async () => {
+    try {
+      console.log('🔄 Cargando empresas partners...');
+      const response = await fetch('/api/empresas/lista');
+      
+      if (!response.ok) {
+        console.error('❌ Error HTTP:', response.status, response.statusText);
+        return;
+      }
+      
+      const result = await response.json();
+      console.log('📊 Respuesta empresas:', result);
+      
+      if (result.success && result.data) {
+        console.log('✅ Partners cargados:', result.data.length);
+        setEmpresasPartners(result.data.slice(0, 6)); // Mostrar solo las primeras 6
+      } else {
+        console.log('⚠️ No se encontraron empresas o error en respuesta');
+      }
+    } catch (error) {
+      console.error('❌ Error al cargar empresas partners:', error);
+      setEmpresasPartners([]); // Array vacío en caso de error
+    }
+  };
 
   const fetchUserBalance = async () => {
     try {
@@ -345,6 +372,51 @@ export default function HomePage() {
                   </div>
                   <span className="text-sm">Empresas</span>
                 </button>
+              </div>
+
+              {/* Empresas Partners - Pegado a Empresas */}
+              <div className="hidden xl:flex items-center ml-4 bg-white/60 backdrop-blur-sm rounded-full px-3 py-2 shadow-sm border border-slate-200/50">
+                <span className="text-xs font-medium text-slate-500 mr-3">Partners:</span>
+                <div className="flex items-center gap-2">
+                  {empresasPartners.map((partner) => (
+                    <a
+                      key={partner.id}
+                      href={`/empresas/home?id=${partner.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group relative flex items-center"
+                      title={partner.nombre}
+                    >
+                      <div className="h-10 w-20 rounded-full border-2 border-slate-200/60 hover:border-blue-400 transition-all duration-200 bg-white shadow-sm hover:shadow-md hover:scale-110 overflow-hidden flex items-center justify-center">
+                        {partner.logo_url ? (
+                          <img 
+                            src={partner.logo_url} 
+                            alt={partner.nombre}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                              e.target.parentElement.innerHTML = '<span class="text-xs text-slate-400">Logo</span>';
+                            }}
+                          />
+                        ) : (
+                          <span className="text-xs text-slate-400">Logo</span>
+                        )}
+                      </div>
+                      {/* Tooltip al hacer hover */}
+                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10 shadow-lg">
+                        {partner.nombre}
+                        <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1">
+                          <div className="border-4 border-transparent border-t-gray-900"></div>
+                        </div>
+                      </div>
+                    </a>
+                  ))}
+                  {empresasPartners.length > 6 && (
+                    <button className="h-8 px-3 rounded-full bg-slate-100 hover:bg-slate-200 border-2 border-slate-200/60 flex items-center justify-center text-slate-600 text-xs font-semibold transition-all hover:scale-105">
+                      +{empresasPartners.length - 6}
+                    </button>
+                  )}
+                </div>
               </div>
             </nav>
 

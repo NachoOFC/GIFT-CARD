@@ -31,21 +31,47 @@ export default function PerfilEmpresaLinkedIn() {
   const [modalEditarInformacion, setModalEditarInformacion] = useState(false);
   const [modalEditarDescripcion, setModalEditarDescripcion] = useState(false);
   const [mostrarDescripcionCompleta, setMostrarDescripcionCompleta] = useState(false);
+  const [esPropietario, setEsPropietario] = useState(true); // true si es su propio perfil, false si es visitante
 
   useEffect(() => {
     const cargarDatosEmpresa = async () => {
       try {
-        const empresaSession = localStorage.getItem('empresaSession');
+        // Verificar si hay un ID en la URL (para ver perfil de otra empresa)
+        const urlParams = new URLSearchParams(window.location.search);
+        const empresaIdUrl = urlParams.get('id');
         
-        if (!empresaSession) {
-          window.location.href = "/empresas/login";
-          return;
-        }
+        let empresaId = empresaIdUrl;
+        let propietario = true; // Por defecto asumimos que es propietario
+        
+        // Si no hay ID en URL, usar el de la sesión
+        if (!empresaId) {
+          const empresaSession = localStorage.getItem('empresaSession');
+          
+          if (!empresaSession) {
+            window.location.href = "/empresas/login";
+            return;
+          }
 
-        const sessionData = JSON.parse(empresaSession);
+          const sessionData = JSON.parse(empresaSession);
+          empresaId = sessionData.id;
+          propietario = true; // Es su propio perfil
+        } else {
+          // Hay ID en la URL, verificar si es el mismo de la sesión
+          const empresaSession = localStorage.getItem('empresaSession');
+          if (empresaSession) {
+            const sessionData = JSON.parse(empresaSession);
+            propietario = (empresaId === sessionData.id.toString());
+          } else {
+            propietario = false; // No hay sesión, es un visitante
+          }
+        }
+        
+        // Actualizar estado de propietario
+        setEsPropietario(propietario);
+        console.log('👤 Es propietario del perfil:', propietario);
         
         // Obtener datos completos desde la base de datos
-        const response = await fetch(`/api/empresas/perfil?id=${sessionData.id}`);
+        const response = await fetch(`/api/empresas/perfil?id=${empresaId}`);
         const result = await response.json();
 
         if (result.success) {
@@ -127,12 +153,16 @@ export default function PerfilEmpresaLinkedIn() {
     setEmpresa(prev => ({
       ...prev,
       nombre: nuevaInfo.nombre,
-      slogan: nuevaInfo.descripcion
+      slogan: nuevaInfo.descripcion,
+      logo_partners: nuevaInfo.logo_partners || prev.logo_partners
     }));
 
     // Actualizar también en localStorage
     const empresaSession = JSON.parse(localStorage.getItem('empresaSession'));
     empresaSession.nombre = nuevaInfo.nombre;
+    if (nuevaInfo.logo_partners) {
+      empresaSession.logo_partners = nuevaInfo.logo_partners;
+    }
     localStorage.setItem('empresaSession', JSON.stringify(empresaSession));
   };
 
@@ -182,53 +212,67 @@ export default function PerfilEmpresaLinkedIn() {
           </div>
 
           {/* Navegación */}
-          <nav className="flex items-center gap-1">
-            <button
-              className="flex flex-col items-center px-3 py-2 hover:bg-gray-100 rounded text-gray-700 text-xs relative"
-              onClick={() => window.location.href = "/home"}
-            >
-              <span className="text-xl mb-0.5">🏠</span>
-              <span className="font-medium">Inicio</span>
-            </button>
+          {esPropietario ? (
+            <nav className="flex items-center gap-1">
+              <button
+                className="flex flex-col items-center px-3 py-2 hover:bg-gray-100 rounded text-gray-700 text-xs relative"
+                onClick={() => window.location.href = "/home"}
+              >
+                <span className="text-xl mb-0.5">🏠</span>
+                <span className="font-medium">Inicio</span>
+              </button>
 
-            <a
-              href="/admin/orders"
-              className="flex flex-col items-center px-3 py-2 hover:bg-gray-100 rounded text-gray-700 text-xs relative"
-            >
-              <span className="text-xl mb-0.5">📊</span>
-              <span className="font-medium">Admin</span>
-            </a>
+              <a
+                href="/admin/orders"
+                className="flex flex-col items-center px-3 py-2 hover:bg-gray-100 rounded text-gray-700 text-xs relative"
+              >
+                <span className="text-xl mb-0.5">📊</span>
+                <span className="font-medium">Admin</span>
+              </a>
 
-            <button 
-              className="flex flex-col items-center px-3 py-2 hover:bg-gray-100 rounded text-gray-700 text-xs relative"
-            >
-              <span className="text-xl mb-0.5">💬</span>
-              <span className="font-medium">Mensajes</span>
-              <span className="absolute top-1 right-1 bg-red-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
-                3
-              </span>
-            </button>
+              <button 
+                className="flex flex-col items-center px-3 py-2 hover:bg-gray-100 rounded text-gray-700 text-xs relative"
+              >
+                <span className="text-xl mb-0.5">💬</span>
+                <span className="font-medium">Mensajes</span>
+                <span className="absolute top-1 right-1 bg-red-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                  3
+                </span>
+              </button>
 
-            <button 
-              className="flex flex-col items-center px-3 py-2 hover:bg-gray-100 rounded text-gray-700 text-xs relative"
-            >
-              <svg className="w-5 h-5 mb-0.5" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"/>
-              </svg>
-              <span className="font-medium">Notificaciones</span>
-              <span className="absolute top-1 right-1 bg-red-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
-                18
-              </span>
-            </button>
+              <button 
+                className="flex flex-col items-center px-3 py-2 hover:bg-gray-100 rounded text-gray-700 text-xs relative"
+              >
+                <svg className="w-5 h-5 mb-0.5" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"/>
+                </svg>
+                <span className="font-medium">Notificaciones</span>
+                <span className="absolute top-1 right-1 bg-red-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                  18
+                </span>
+              </button>
 
-            {/* Botón Cerrar Sesión */}
-            <button
-              onClick={handleLogout}
-              className="ml-4 px-4 py-2 bg-red-600 text-white rounded-full text-xs font-semibold hover:bg-red-700 transition-all"
-            >
-              Cerrar sesión
-            </button>
-          </nav>
+              {/* Botón Cerrar Sesión */}
+              <button
+                onClick={handleLogout}
+                className="ml-4 px-4 py-2 bg-red-600 text-white rounded-full text-xs font-semibold hover:bg-red-700 transition-all"
+              >
+                Cerrar sesión
+              </button>
+            </nav>
+          ) : (
+            <nav className="flex items-center gap-2">
+              <button
+                onClick={() => window.location.href = "/home"}
+                className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white rounded-full text-sm font-semibold hover:bg-blue-700 transition-all shadow-sm"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Volver al Inicio
+              </button>
+            </nav>
+          )}
         </div>
       </header>
 
@@ -243,15 +287,17 @@ export default function PerfilEmpresaLinkedIn() {
               alt="Imagen de fondo" 
               className="w-full h-full object-cover" 
             />
-            <button 
-              onClick={() => setModalEditarPortada(true)}
-              className="absolute top-4 right-4 bg-white hover:bg-gray-50 rounded-full p-2 shadow transition-all"
-              aria-label="Editar fondo"
-            >
-              <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-              </svg>
-            </button>
+            {esPropietario && (
+              <button 
+                onClick={() => setModalEditarPortada(true)}
+                className="absolute top-4 right-4 bg-white hover:bg-gray-50 rounded-full p-2 shadow transition-all"
+                aria-label="Editar fondo"
+              >
+                <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
+              </button>
+            )}
           </div>
           
           {/* Sección de perfil */}
@@ -267,16 +313,18 @@ export default function PerfilEmpresaLinkedIn() {
                     className="w-full h-full object-cover"
                   />
                 </div>
-                <button 
-                  onClick={() => setModalEditarLogo(true)}
-                  className="absolute bottom-2 right-2 bg-white hover:bg-gray-50 rounded-full p-1.5 shadow opacity-0 group-hover:opacity-100 transition-all"
-                  aria-label="Actualizar logo"
-                >
-                  <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                </button>
+                {esPropietario && (
+                  <button 
+                    onClick={() => setModalEditarLogo(true)}
+                    className="absolute bottom-2 right-2 bg-white hover:bg-gray-50 rounded-full p-1.5 shadow opacity-0 group-hover:opacity-100 transition-all"
+                    aria-label="Actualizar logo"
+                  >
+                    <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  </button>
+                )}
               </div>
 
               {/* Información de la empresa - Al lado del logo */}
@@ -303,32 +351,34 @@ export default function PerfilEmpresaLinkedIn() {
                     )}
                   </div>
                   
-                  {/* Botones de editar */}
-                  <div className="flex items-center gap-2">
-                    {/* Botón de editar presentación */}
-                    <button
-                      onClick={() => setModalEditarDescripcion(true)}
-                      className="p-2 hover:bg-gray-100 rounded-full transition-all"
-                      aria-label="Editar presentación"
-                      title="Editar nombre y descripción"
-                    >
-                      <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                      </svg>
-                    </button>
-                    
-                    {/* Botón de editar enlaces/redes */}
-                    <button
-                      onClick={() => setModalEditarRedes(true)}
-                      className="p-2 hover:bg-gray-100 rounded-full transition-all"
-                      aria-label="Editar enlaces"
-                      title="Editar redes sociales y enlaces"
-                    >
-                      <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                      </svg>
-                    </button>
-                  </div>
+                  {/* Botones de editar - Solo visible para propietario */}
+                  {esPropietario && (
+                    <div className="flex items-center gap-2">
+                      {/* Botón de editar presentación */}
+                      <button
+                        onClick={() => setModalEditarDescripcion(true)}
+                        className="p-2 hover:bg-gray-100 rounded-full transition-all"
+                        aria-label="Editar presentación"
+                        title="Editar nombre y descripción"
+                      >
+                        <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                        </svg>
+                      </button>
+                      
+                      {/* Botón de editar enlaces/redes */}
+                      <button
+                        onClick={() => setModalEditarRedes(true)}
+                        className="p-2 hover:bg-gray-100 rounded-full transition-all"
+                        aria-label="Editar enlaces"
+                        title="Editar redes sociales y enlaces"
+                      >
+                        <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                        </svg>
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 {/* Seguidores y Redes Sociales */}
@@ -457,15 +507,17 @@ export default function PerfilEmpresaLinkedIn() {
                   <h3 className="text-sm font-semibold text-gray-900">Información de Contacto</h3>
                   <p className="text-xs text-gray-600 mt-0.5">👁️ Solo para ti</p>
                 </div>
-                <button 
-                  onClick={() => setModalEditarInformacion(true)}
-                  className="text-gray-600 hover:text-blue-600 transition-colors"
-                  title="Editar información"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                  </svg>
-                </button>
+                {esPropietario && (
+                  <button 
+                    onClick={() => setModalEditarInformacion(true)}
+                    className="text-gray-600 hover:text-blue-600 transition-colors"
+                    title="Editar información"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
+                  </button>
+                )}
               </div>
               <div className="p-3 space-y-2 text-xs">
                 {/* Ubicación */}
@@ -557,35 +609,37 @@ export default function PerfilEmpresaLinkedIn() {
 
           {/* Columna central */}
           <main className="col-span-6 space-y-2">
-            {/* Crear publicación */}
-            <div className="bg-white border border-gray-300 rounded-lg p-4 shadow-sm">
-              <div className="flex gap-2">
-                <img src={empresa.logo} alt="Logo" className="w-12 h-12 rounded-full" />
-                <button className="flex-1 text-left px-4 py-2.5 border border-gray-400 rounded-full text-gray-600 text-sm font-semibold hover:bg-gray-100">
-                  Iniciar una publicación
-                </button>
+            {/* Crear publicación - Solo para propietarios */}
+            {esPropietario && (
+              <div className="bg-white border border-gray-300 rounded-lg p-4 shadow-sm">
+                <div className="flex gap-2">
+                  <img src={empresa.logo} alt="Logo" className="w-12 h-12 rounded-full" />
+                  <button className="flex-1 text-left px-4 py-2.5 border border-gray-400 rounded-full text-gray-600 text-sm font-semibold hover:bg-gray-100">
+                    Iniciar una publicación
+                  </button>
+                </div>
+                <div className="flex justify-around mt-3 pt-3 border-t border-gray-300">
+                  <a href="/gift-cards" className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 rounded text-gray-600 text-sm font-semibold transition-all">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+                    </svg>
+                    Crear Gift Card
+                  </a>
+                  <button className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 rounded text-gray-600 text-sm font-semibold transition-all">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M10.34 15.84c-.688-.06-1.386-.09-2.09-.09H7.5a4.5 4.5 0 110-9h.75c.704 0 1.402-.03 2.09-.09m0 9.18c.253.962.584 1.892.985 2.783.247.55.06 1.21-.463 1.511l-.657.38c-.551.318-1.26.117-1.527-.461a20.845 20.845 0 01-1.44-4.282m3.102.069a18.03 18.03 0 01-.59-4.59c0-1.586.205-3.124.59-4.59m0 9.18a23.848 23.848 0 018.835 2.535M10.34 6.66a23.847 23.847 0 008.835-2.535m0 0A23.74 23.74 0 0018.795 3m.38 1.125a23.91 23.91 0 011.014 5.395m-1.014 8.855c-.118.38-.245.754-.38 1.125m.38-1.125a23.91 23.91 0 001.014-5.395m0-3.46c.495.413.811 1.035.811 1.73 0 .695-.316 1.317-.811 1.73m0-3.46a24.347 24.347 0 010 3.46" />
+                    </svg>
+                    Crear Campaña
+                  </button>
+                  <button className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 rounded text-gray-600 text-sm font-semibold transition-all">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5M9 11.25v1.5M12 9v3.75m3-6v6" />
+                    </svg>
+                    Crear Publicidad
+                  </button>
+                </div>
               </div>
-              <div className="flex justify-around mt-3 pt-3 border-t border-gray-300">
-                <a href="/gift-cards" className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 rounded text-gray-600 text-sm font-semibold transition-all">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
-                  </svg>
-                  Crear Gift Card
-                </a>
-                <button className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 rounded text-gray-600 text-sm font-semibold transition-all">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M10.34 15.84c-.688-.06-1.386-.09-2.09-.09H7.5a4.5 4.5 0 110-9h.75c.704 0 1.402-.03 2.09-.09m0 9.18c.253.962.584 1.892.985 2.783.247.55.06 1.21-.463 1.511l-.657.38c-.551.318-1.26.117-1.527-.461a20.845 20.845 0 01-1.44-4.282m3.102.069a18.03 18.03 0 01-.59-4.59c0-1.586.205-3.124.59-4.59m0 9.18a23.848 23.848 0 018.835 2.535M10.34 6.66a23.847 23.847 0 008.835-2.535m0 0A23.74 23.74 0 0018.795 3m.38 1.125a23.91 23.91 0 011.014 5.395m-1.014 8.855c-.118.38-.245.754-.38 1.125m.38-1.125a23.91 23.91 0 001.014-5.395m0-3.46c.495.413.811 1.035.811 1.73 0 .695-.316 1.317-.811 1.73m0-3.46a24.347 24.347 0 010 3.46" />
-                  </svg>
-                  Crear Campaña
-                </button>
-                <button className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 rounded text-gray-600 text-sm font-semibold transition-all">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5M9 11.25v1.5M12 9v3.75m3-6v6" />
-                  </svg>
-                  Crear Publicidad
-                </button>
-              </div>
-            </div>
+            )}
 
             {/* Filtros */}
             <div className="flex items-center justify-between py-2">
@@ -762,57 +816,62 @@ export default function PerfilEmpresaLinkedIn() {
         </div>
       </div>
 
-      {/* Modales de edición */}
-      <ModalEditarImagen
-        isOpen={modalEditarPortada}
-        onClose={() => setModalEditarPortada(false)}
-        tipo="portada"
-        empresaId={empresa?.id}
-        currentImage={empresa?.portada}
-        onImageUpdated={(url) => handleImagenActualizada(url, 'portada')}
-      />
+      {/* Modales de edición - Solo para propietarios */}
+      {esPropietario && (
+        <>
+          <ModalEditarImagen
+            isOpen={modalEditarPortada}
+            onClose={() => setModalEditarPortada(false)}
+            tipo="portada"
+            empresaId={empresa?.id}
+            currentImage={empresa?.portada}
+            onImageUpdated={(url) => handleImagenActualizada(url, 'portada')}
+          />
 
-      <ModalEditarImagen
-        isOpen={modalEditarLogo}
-        onClose={() => setModalEditarLogo(false)}
-        tipo="logo"
-        empresaId={empresa?.id}
-        currentImage={empresa?.logo}
-        onImageUpdated={(url) => handleImagenActualizada(url, 'logo')}
-      />
+          <ModalEditarImagen
+            isOpen={modalEditarLogo}
+            onClose={() => setModalEditarLogo(false)}
+            tipo="logo"
+            empresaId={empresa?.id}
+            currentImage={empresa?.logo}
+            onImageUpdated={(url) => handleImagenActualizada(url, 'logo')}
+          />
 
-      <ModalEditarRedes
-        isOpen={modalEditarRedes}
-        onClose={() => setModalEditarRedes(false)}
-        empresaId={empresa?.id}
-        redesActuales={{
-          sitio_web: empresa?.sitio_web,
-          facebook: empresa?.facebook,
-          instagram: empresa?.instagram,
-          twitter: empresa?.twitter,
-          linkedin: empresa?.linkedin,
-          youtube: empresa?.youtube,
-          tiktok: empresa?.tiktok
-        }}
-        onRedesActualizadas={handleRedesActualizadas}
-      />
+          <ModalEditarRedes
+            isOpen={modalEditarRedes}
+            onClose={() => setModalEditarRedes(false)}
+            empresaId={empresa?.id}
+            redesActuales={{
+              sitio_web: empresa?.sitio_web,
+              facebook: empresa?.facebook,
+              instagram: empresa?.instagram,
+              twitter: empresa?.twitter,
+              linkedin: empresa?.linkedin,
+              youtube: empresa?.youtube,
+              tiktok: empresa?.tiktok
+            }}
+            onRedesActualizadas={handleRedesActualizadas}
+          />
 
-      <ModalEditarInformacion
-        isOpen={modalEditarInformacion}
-        onClose={() => setModalEditarInformacion(false)}
-        empresaId={empresa?.id}
-        informacionActual={empresa}
-        onInformacionActualizada={handleInformacionActualizada}
-      />
+          <ModalEditarInformacion
+            isOpen={modalEditarInformacion}
+            onClose={() => setModalEditarInformacion(false)}
+            empresaId={empresa?.id}
+            informacionActual={empresa}
+            onInformacionActualizada={handleInformacionActualizada}
+          />
 
-      <ModalEditarDescripcion
-        isOpen={modalEditarDescripcion}
-        onClose={() => setModalEditarDescripcion(false)}
-        empresaId={empresa?.id}
-        nombreActual={empresa?.nombre}
-        descripcionActual={empresa?.slogan}
-        onDescripcionActualizada={handleDescripcionActualizada}
-      />
+          <ModalEditarDescripcion
+            isOpen={modalEditarDescripcion}
+            onClose={() => setModalEditarDescripcion(false)}
+            empresaId={empresa?.id}
+            nombreActual={empresa?.nombre}
+            descripcionActual={empresa?.slogan}
+            logoPartnersActual={empresa?.logo_partners}
+            onDescripcionActualizada={handleDescripcionActualizada}
+          />
+        </>
+      )}
     </div>
   );
 }
